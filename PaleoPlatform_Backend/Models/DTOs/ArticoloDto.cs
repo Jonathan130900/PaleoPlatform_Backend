@@ -20,4 +20,11 @@
     {
         public IFormFile File { get; set; }
     }
+
+    public class ArticoloUpdateDto
+    {
+        public string Titolo { get; set; }
+        public string Contenuto { get; set; }
+        public IFormFile? Copertina { get; set; }
+    }
 }

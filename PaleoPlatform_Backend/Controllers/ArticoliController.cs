@@ -83,11 +83,14 @@ namespace PaleoPlatform_Backend.Controllers
             var articolo = await _service.GetByIdAsync(id);
             if (articolo == null) return NotFound();
 
+            // Handle file upload and update logic
             if (dto.Copertina != null)
             {
-                articolo.CopertinaUrl = await _service.HandleFileUploadAsync(dto.Copertina, articolo);
+                var newCopertinaUrl = await _service.HandleFileUploadAsync(dto.Copertina, articolo);
+                articolo.CopertinaUrl = newCopertinaUrl;
             }
 
+            // Update article fields
             articolo.Titolo = dto.Titolo;
             articolo.Contenuto = dto.Contenuto;
 

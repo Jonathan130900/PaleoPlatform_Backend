@@ -2,7 +2,6 @@
 using PaleoPlatform_Backend.Models;
 using Microsoft.EntityFrameworkCore;
 
-
 namespace PaleoPlatform_Backend.Services
 {
     public class ArticoloService : IArticoloService
@@ -72,19 +71,20 @@ namespace PaleoPlatform_Backend.Services
 
         public async Task<string> HandleFileUploadAsync(IFormFile copertinaFile, Articolo articolo)
         {
-            var uploadsPath = Path.Combine(_environment.WebRootPath, "uploads");
-            if (!Directory.Exists(uploadsPath))
-                Directory.CreateDirectory(uploadsPath);
+            var articleFolder = Path.Combine(_environment.WebRootPath, "uploads", $"{articolo.Id}_{articolo.Titolo}");
+            if (!Directory.Exists(articleFolder))
+                Directory.CreateDirectory(articleFolder);
+
+            var thumbnailPath = Path.Combine(articleFolder, "thumbnail");
+            if (!Directory.Exists(thumbnailPath))
+                Directory.CreateDirectory(thumbnailPath);
 
             var fileName = Guid.NewGuid().ToString() + Path.GetExtension(copertinaFile.FileName);
-            var filePath = Path.Combine(uploadsPath, fileName);
+            var filePath = Path.Combine(thumbnailPath, fileName);
 
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await copertinaFile.CopyToAsync(stream);
-            }
+            await SaveFileAsync(copertinaFile, filePath);
 
-            return $"/uploads/{fileName}";
+            return $"/uploads/{articolo.Id}_{articolo.Titolo}/thumbnail/{fileName}";
         }
 
         public async Task<string> SaveInlineImageAsync(IFormFile file)

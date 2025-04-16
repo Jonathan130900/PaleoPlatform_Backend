@@ -20,6 +20,8 @@ namespace PaleoPlatform_Backend.Models
         public ApplicationUser Autore { get; set; }
 
         public string? CopertinaUrl { get; set; } = string.Empty;
+        public DateTime? DataUltimaModifica { get; set; }
+
 
     }
 }
