@@ -7,8 +7,8 @@ using PaleoPlatform_Backend.Helpers;
 using PaleoPlatform_Backend.Models;
 using AutoMapper;
 using PaleoPlatform_Backend.Services;
-using Swashbuckle.AspNetCore.SwaggerGen;
 using Microsoft.AspNetCore.Http;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 var builder = WebApplication.CreateBuilder(args);
 
