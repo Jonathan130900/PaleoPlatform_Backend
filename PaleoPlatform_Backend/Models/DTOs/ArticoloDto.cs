@@ -12,8 +12,9 @@
         public int Id { get; set; }
         public string Titolo { get; set; }
         public string Contenuto { get; set; }
-        public string AutoreEmail { get; set; }
+        public string AutoreUserName { get; set; }
         public DateTime DataPubblicazione { get; set; }
+        public List<CommentoReadDto> Commenti { get; set; }
     }
 
     public class InlineImageUploadDto

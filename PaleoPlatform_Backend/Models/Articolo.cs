@@ -22,6 +22,6 @@ namespace PaleoPlatform_Backend.Models
         public string? CopertinaUrl { get; set; } = string.Empty;
         public DateTime? DataUltimaModifica { get; set; }
 
-
+        public ICollection<Commento> Commenti { get; set; }
     }
 }

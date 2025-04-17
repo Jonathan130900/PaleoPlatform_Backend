@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using PaleoPlatform_Backend.Data;
 using PaleoPlatform_Backend.Models;
 using PaleoPlatform_Backend.Models.DTOs;
 using PaleoPlatform_Backend.Services;
@@ -17,17 +18,20 @@ namespace PaleoPlatform_Backend.Controllers
         private readonly RoleManager<ApplicationRole> _roleManager;
         private readonly IPasswordHasher<ApplicationUser> _passwordHasher;
         private readonly JwtService _jwtService;
+        private readonly ApplicationDbContext _context;
 
         public AuthController(
             UserManager<ApplicationUser> userManager,
             RoleManager<ApplicationRole> roleManager,
             IPasswordHasher<ApplicationUser> passwordHasher,
-            JwtService jwtService)
+            JwtService jwtService,
+            ApplicationDbContext context)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _passwordHasher = passwordHasher;
             _jwtService = jwtService;
+            _context = context;
         }
 
         [HttpPost("login")]
@@ -186,6 +190,33 @@ namespace PaleoPlatform_Backend.Controllers
             if (!isAdmin && requestingUser.Id != userToDelete.Id)
                 return StatusCode(403, "Non sei autorizzato a eliminare altri utenti.");
 
+            // Step 1: Reassign comments to the "[deleted]" user
+            var deletedUser = await _userManager.FindByEmailAsync("[deleted]@deleted.com"); // Use an existing special user
+            if (deletedUser == null)
+            {
+                // Create the "[deleted]" user if it doesn't exist
+                deletedUser = new ApplicationUser
+                {
+                    UserName = "[deleted]",
+                    Email = "[deleted]@deleted.com"
+                };
+                await _userManager.CreateAsync(deletedUser);
+            }
+
+            // Reassign comments to "[deleted]" user
+            var commentsToReassign = await _context.Commenti
+                .Where(c => c.UtenteId == userToDelete.Id)
+                .ToListAsync();
+
+            foreach (var comment in commentsToReassign)
+            {
+                comment.UtenteId = deletedUser.Id; // Reassign the comment to the "[deleted]" user
+                _context.Commenti.Update(comment);
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Step 2: Delete the user
             var result = await _userManager.DeleteAsync(userToDelete);
 
             if (!result.Succeeded)

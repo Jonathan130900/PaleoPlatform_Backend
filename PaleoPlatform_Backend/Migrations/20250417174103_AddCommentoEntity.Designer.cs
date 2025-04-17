@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PaleoPlatform_Backend.Data;
 
@@ -11,9 +12,11 @@ using PaleoPlatform_Backend.Data;
 namespace PaleoPlatform_Backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250417174103_AddCommentoEntity")]
+    partial class AddCommentoEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -253,7 +256,7 @@ namespace PaleoPlatform_Backend.Migrations
 
                     b.HasIndex("AutoreId");
 
-                    b.ToTable("Articoli", (string)null);
+                    b.ToTable("Articoli");
                 });
 
             modelBuilder.Entity("PaleoPlatform_Backend.Models.Commento", b =>
@@ -263,9 +266,6 @@ namespace PaleoPlatform_Backend.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("ArticoloId")
-                        .HasColumnType("int");
 
                     b.Property<string>("Contenuto")
                         .IsRequired()
@@ -289,13 +289,11 @@ namespace PaleoPlatform_Backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ArticoloId");
-
                     b.HasIndex("ParentCommentId");
 
                     b.HasIndex("UtenteId");
 
-                    b.ToTable("Commenti", (string)null);
+                    b.ToTable("Commenti");
                 });
 
             modelBuilder.Entity("PaleoPlatform_Backend.Models.UploadedFile", b =>
@@ -322,7 +320,7 @@ namespace PaleoPlatform_Backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Files", (string)null);
+                    b.ToTable("Files");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -389,10 +387,6 @@ namespace PaleoPlatform_Backend.Migrations
 
             modelBuilder.Entity("PaleoPlatform_Backend.Models.Commento", b =>
                 {
-                    b.HasOne("PaleoPlatform_Backend.Models.Articolo", "Articolo")
-                        .WithMany("Commenti")
-                        .HasForeignKey("ArticoloId");
-
                     b.HasOne("PaleoPlatform_Backend.Models.Commento", "ParentComment")
                         .WithMany()
                         .HasForeignKey("ParentCommentId");
@@ -403,16 +397,9 @@ namespace PaleoPlatform_Backend.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.Navigation("Articolo");
-
                     b.Navigation("ParentComment");
 
                     b.Navigation("Utente");
-                });
-
-            modelBuilder.Entity("PaleoPlatform_Backend.Models.Articolo", b =>
-                {
-                    b.Navigation("Commenti");
                 });
 #pragma warning restore 612, 618
         }

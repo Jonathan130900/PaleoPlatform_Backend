@@ -121,14 +121,24 @@ namespace PaleoPlatform_Backend.Services
             return true;
         }
 
+        // Modify GetAllAsync to eagerly load comments and user data
         public async Task<IEnumerable<Articolo>> GetAllAsync()
         {
-            return await _context.Articoli.Include(a => a.Autore).ToListAsync();
+            return await _context.Articoli
+                .Include(a => a.Commenti)  // Eagerly load comments
+                .ThenInclude(c => c.Utente) // If you want to include user info for comments
+                .Include(a => a.Autore)    // Eagerly load the article's author as well
+                .ToListAsync();
         }
 
-        public async Task<Articolo> GetByIdAsync(int id)
+        // Modify GetByIdAsync to eagerly load comments and their users
+        public async Task<Articolo?> GetByIdAsync(int id)
         {
-            return await _context.Articoli.Include(a => a.Autore).FirstOrDefaultAsync(a => a.Id == id);
+            return await _context.Articoli
+                .Include(a => a.Autore)
+                .Include(a => a.Commenti)  // Eagerly load comments
+                    .ThenInclude(c => c.Utente) // Include the user info for each comment
+                .FirstOrDefaultAsync(a => a.Id == id);
         }
 
         public async Task<bool> UpdateAsync(Articolo articolo)

@@ -10,7 +10,12 @@ namespace PaleoPlatform_Backend.Helpers
         public MappingProfile()
         {
             CreateMap<Articolo, ArticoloReadDto>()
-                .ForMember(dest => dest.AutoreEmail, opt => opt.MapFrom(src => src.Autore.Email));
+            .ForMember(dest => dest.AutoreUserName, opt => opt.MapFrom(src => src.Autore.UserName))
+            .ForMember(dest => dest.Commenti, opt => opt.MapFrom(src => src.Commenti));
+
+            CreateMap<Commento, CommentoReadDto>()
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Utente.UserName));
+
             CreateMap<ArticoloCreateDto, Articolo>();
             CreateMap<ArticoloUpdateDto, Articolo>()
                 .ForMember(dest => dest.CopertinaUrl, opt => opt.Ignore())
