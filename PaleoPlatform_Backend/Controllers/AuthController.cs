@@ -17,6 +17,7 @@ namespace PaleoPlatform_Backend.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<ApplicationRole> _roleManager;
         private readonly IPasswordHasher<ApplicationUser> _passwordHasher;
+        private readonly IUtenteService _utenteService;
         private readonly JwtService _jwtService;
         private readonly ApplicationDbContext _context;
 
@@ -24,14 +25,38 @@ namespace PaleoPlatform_Backend.Controllers
             UserManager<ApplicationUser> userManager,
             RoleManager<ApplicationRole> roleManager,
             IPasswordHasher<ApplicationUser> passwordHasher,
+            IUtenteService utenteService,
             JwtService jwtService,
             ApplicationDbContext context)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _passwordHasher = passwordHasher;
+            _utenteService = utenteService;
             _jwtService = jwtService;
             _context = context;
+        }
+
+        [Authorize(Roles = "Amministratore")]
+        [HttpGet("admin-users")]
+        public async Task<IActionResult> GetAdminUsers()
+        {
+            var users = await _userManager.Users.ToListAsync();  // Fetch all users first
+
+            // Now filter the users with the role check being awaited inside a loop or LINQ method.
+            var filteredUsers = new List<ApplicationUser>();
+
+            foreach (var user in users)
+            {
+                // Check if the user is not '[deleted]' and does not have the 'System' role
+                if (!user.UserName.Equals("[deleted]") &&
+                    !await _userManager.IsInRoleAsync(user, "System"))
+                {
+                    filteredUsers.Add(user);
+                }
+            }
+
+            return Ok(filteredUsers);
         }
 
         [HttpPost("login")]
@@ -171,58 +196,28 @@ namespace PaleoPlatform_Backend.Controllers
             return Ok("Dati aggiornati con successo.");
         }
 
-        [Authorize]
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(string id)
+        [HttpDelete("delete/{userId}")]
+        [Authorize(Roles = "Amministratore")]
+        public async Task<IActionResult> DeleteUser(string userId)
         {
-            var userToDelete = await _userManager.FindByIdAsync(id);
-            if (userToDelete == null)
-                return NotFound("Utente non trovato");
+            var requestingUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var success = await _utenteService.DeleteUserAsync(userId, requestingUserId);
 
-            var requestingUser = await _userManager.GetUserAsync(User);
-            if (requestingUser == null)
-                return Unauthorized("Token invalido");
+            if (!success)
+                return BadRequest("Impossibile eliminare l'utente.");
 
-            var requestingUserRoles = await _userManager.GetRolesAsync(requestingUser);
-            var isAdmin = requestingUserRoles.Contains("Amministratore");
-
-            // If not admin, only allow self-deletion
-            if (!isAdmin && requestingUser.Id != userToDelete.Id)
-                return StatusCode(403, "Non sei autorizzato a eliminare altri utenti.");
-
-            // Step 1: Reassign comments to the "[deleted]" user
-            var deletedUser = await _userManager.FindByEmailAsync("[deleted]@deleted.com"); // Use an existing special user
-            if (deletedUser == null)
-            {
-                // Create the "[deleted]" user if it doesn't exist
-                deletedUser = new ApplicationUser
-                {
-                    UserName = "[deleted]",
-                    Email = "[deleted]@deleted.com"
-                };
-                await _userManager.CreateAsync(deletedUser);
-            }
-
-            // Reassign comments to "[deleted]" user
-            var commentsToReassign = await _context.Commenti
-                .Where(c => c.UtenteId == userToDelete.Id)
-                .ToListAsync();
-
-            foreach (var comment in commentsToReassign)
-            {
-                comment.UtenteId = deletedUser.Id; // Reassign the comment to the "[deleted]" user
-                _context.Commenti.Update(comment);
-            }
-
-            await _context.SaveChangesAsync();
-
-            // Step 2: Delete the user
-            var result = await _userManager.DeleteAsync(userToDelete);
-
-            if (!result.Succeeded)
-                return BadRequest(result.Errors);
-
-            return Ok(new { message = "Utente eliminato con successo!" });
+            return Ok("Utente eliminato con successo.");
         }
+
+        [Authorize]
+        [HttpGet("me/claims")]
+        public IActionResult GetMyClaims()
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var claims = identity?.Claims.Select(c => new { c.Type, c.Value });
+            return Ok(claims);
+        }
+
+
     }
 }

@@ -12,7 +12,7 @@ namespace PaleoPlatform_Backend.Helpers
             var roleManager = serviceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
             var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-            string[] roles = { "Utente", "Moderatore", "Amministratore" };
+            string[] roles = { "Utente", "Moderatore", "Amministratore", "System" }; // Added "System" role
 
             foreach (var role in roles)
             {
@@ -53,6 +53,27 @@ namespace PaleoPlatform_Backend.Helpers
             else
             {
                 Console.WriteLine("Admin already exists.");
+            }
+
+            string deletedEmail = "deleted_user@deleted.com";
+            var deletedUser = await userManager.FindByEmailAsync(deletedEmail);
+            if (deletedUser == null)
+            {
+                var deleted = new ApplicationUser
+                {
+                    UserName = "deleted_user",
+                    Email = deletedEmail,
+                    EmailConfirmed = true
+                };
+                var result = await userManager.CreateAsync(deleted, "FakePassword123!");
+                Console.WriteLine($"Created 'deleted_user' user: {result.Succeeded}");
+
+                if (result.Succeeded)
+                {
+                    // Assign the "System" role to the [deleted] user
+                    var addToRole = await userManager.AddToRoleAsync(deleted, "System");
+                    Console.WriteLine($"Assigned '[deleted]' user to 'System' role: {addToRole.Succeeded}");
+                }
             }
         }
     }

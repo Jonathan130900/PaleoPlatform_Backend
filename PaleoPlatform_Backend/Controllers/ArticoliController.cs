@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using PaleoPlatform_Backend.Models.DTOs;
 using PaleoPlatform_Backend.Models;
 using PaleoPlatform_Backend.Services;
+using Microsoft.EntityFrameworkCore;
+using PaleoPlatform_Backend.Data;
 
 namespace PaleoPlatform_Backend.Controllers
 {
@@ -17,13 +19,15 @@ namespace PaleoPlatform_Backend.Controllers
         private readonly IMapper _mapper;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IWebHostEnvironment _environment;
+        private readonly ApplicationDbContext _context;
 
-        public ArticoliController(IArticoloService service, IMapper mapper, UserManager<ApplicationUser> userManager, IWebHostEnvironment environment)
+        public ArticoliController(IArticoloService service, IMapper mapper, UserManager<ApplicationUser> userManager, IWebHostEnvironment environment, ApplicationDbContext context)
         {
             _service = service;
             _mapper = mapper;
             _userManager = userManager;
             _environment = environment;
+            _context = context;
         }
 
         // GET api/articoli
@@ -98,24 +102,60 @@ namespace PaleoPlatform_Backend.Controllers
             return NoContent();
         }
 
-        // DELETE api/articoli/{id} (Requires Admin or Moderator)
         [Authorize(Roles = "Amministratore,Moderatore")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
+            // Retrieve the article to be deleted
             var articolo = await _service.GetByIdAsync(id);
-            if (articolo == null) return NotFound();
-
-            if (!string.IsNullOrEmpty(articolo.CopertinaUrl))
+            if (articolo == null)
             {
-                var filePath = Path.Combine(_environment.WebRootPath, articolo.CopertinaUrl.TrimStart('/'));
-                if (System.IO.File.Exists(filePath))
-                    System.IO.File.Delete(filePath);
+                return NotFound();  // If article doesn't exist, return 404
             }
 
+            // Retrieve the [deleted] user
+            var deletedUser = await _userManager.FindByEmailAsync("[deleted]@deleted.com");
+            if (deletedUser == null)
+            {
+                return StatusCode(500, "Failed to find the [deleted] user");
+            }
+
+            // Retrieve all comments for this article using the injected _context
+            var comments = await _context.Commenti
+                .Where(c => c.ArticoloId == id)
+                .ToListAsync();
+
+            // Reassign comments to the [deleted] user
+            foreach (var comment in comments)
+            {
+                comment.UtenteId = deletedUser.Id;  // Assign to the [deleted] user
+            }
+
+            // Save changes to comments
+            await _context.SaveChangesAsync();
+
+            // Delete the article
             var success = await _service.DeleteAsync(id);
-            return success ? NoContent() : StatusCode(500, "Failed to delete article");
+            if (success)
+            {
+                // Handle cover image deletion (if any)
+                if (!string.IsNullOrEmpty(articolo.CopertinaUrl))
+                {
+                    var filePath = Path.Combine(_environment.WebRootPath, articolo.CopertinaUrl.TrimStart('/'));
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        System.IO.File.Delete(filePath);
+                    }
+                }
+
+                return NoContent();  // Article and comments reassigned and deleted successfully
+            }
+            else
+            {
+                return StatusCode(500, "Failed to delete article");
+            }
         }
+
 
         // POST api/articoli/upload-inline-image
         [Authorize(Roles = "Amministratore,Moderatore")]

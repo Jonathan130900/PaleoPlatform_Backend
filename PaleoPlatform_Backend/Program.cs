@@ -97,6 +97,8 @@ builder.Services.AddAutoMapper(typeof(Program).Assembly);
 // Add custom services
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<IArticoloService, ArticoloService>();
+builder.Services.AddScoped<IUtenteService, UtenteService>();
+
 
 var app = builder.Build();
 

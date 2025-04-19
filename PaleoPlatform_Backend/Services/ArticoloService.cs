@@ -138,6 +138,7 @@ namespace PaleoPlatform_Backend.Services
                 .Include(a => a.Autore)
                 .Include(a => a.Commenti)  // Eagerly load comments
                     .ThenInclude(c => c.Utente) // Include the user info for each comment
+                    //.ThenInclude(c => c.Risposte)
                 .FirstOrDefaultAsync(a => a.Id == id);
         }
 
