@@ -114,10 +114,10 @@ namespace PaleoPlatform_Backend.Controllers
             }
 
             // Retrieve the [deleted] user
-            var deletedUser = await _userManager.FindByEmailAsync("[deleted]@deleted.com");
+            var deletedUser = await _userManager.FindByEmailAsync("deleted_user@deleted.com");
             if (deletedUser == null)
             {
-                return StatusCode(500, "Failed to find the [deleted] user");
+                return StatusCode(500, "Failed to find the deleted_user user");
             }
 
             // Retrieve all comments for this article using the injected _context
