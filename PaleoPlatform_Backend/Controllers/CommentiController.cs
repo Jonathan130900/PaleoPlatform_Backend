@@ -134,7 +134,6 @@ namespace PaleoPlatform_Backend.Controllers
             return Ok(comments);
         }
 
-        // POST /api/commenti/articolo/{articoloId}
         [HttpPost("articolo/{articoloId}")]
         [Authorize]
         public async Task<IActionResult> CreateCommentForArticolo(int articoloId, CommentoCreateDto dto)
@@ -145,12 +144,55 @@ namespace PaleoPlatform_Backend.Controllers
             if (articolo == null)
                 return NotFound("Articolo non trovato");
 
+            // Ensure only one of the two IDs is provided (either ArticoloId or DiscussioneId)
+            if (dto.DiscussioneId.HasValue)
+                return BadRequest("You cannot specify a DiscussioneId when commenting on an Articolo");
+
             var comment = new Commento
             {
                 Contenuto = dto.Contenuto,
                 UtenteId = userId,
                 ParentCommentId = dto.ParentCommentId,
-                ArticoloId = articoloId
+                ArticoloId = articoloId,
+            };
+
+            _context.Commenti.Add(comment);
+            await _context.SaveChangesAsync();
+
+            var createdDto = new CommentoReadDto
+            {
+                Id = comment.Id,
+                Contenuto = comment.Contenuto,
+                UserName = (await _userManager.FindByIdAsync(userId)).UserName,
+                CreatedAt = comment.DataPubblicazione,
+                ParentCommentId = comment.ParentCommentId,
+                Upvotes = comment.Upvotes,
+                Downvotes = comment.Downvotes
+            };
+
+            return CreatedAtAction(nameof(GetComment), new { id = comment.Id }, createdDto);
+        }
+
+        [HttpPost("discussione/{discussioneId}")]
+        [Authorize]
+        public async Task<IActionResult> CreateCommentForDiscussione(int discussioneId, CommentoCreateDto dto)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var discussione = await _context.Discussione.FindAsync(discussioneId);
+            if (discussione == null)
+                return NotFound("Discussione non trovata");
+
+            // Ensure only one of the two IDs is provided (either ArticoloId or DiscussioneId)
+            if (dto.ArticoloId.HasValue)
+                return BadRequest("You cannot specify an ArticoloId when commenting on a Discussione");
+
+            var comment = new Commento
+            {
+                Contenuto = dto.Contenuto,
+                UtenteId = userId,
+                ParentCommentId = dto.ParentCommentId,
+                DiscussioneId = discussioneId,
             };
 
             _context.Commenti.Add(comment);
@@ -175,6 +217,27 @@ namespace PaleoPlatform_Backend.Controllers
         {
             var comments = await _context.Commenti
                 .Where(c => c.ArticoloId == articoloId)
+                .Include(c => c.Utente)
+                .Select(c => new CommentoReadDto
+                {
+                    Id = c.Id,
+                    Contenuto = c.Contenuto,
+                    UserName = c.Utente.UserName,
+                    CreatedAt = c.DataPubblicazione,
+                    ParentCommentId = c.ParentCommentId,
+                    Upvotes = c.Upvotes,
+                    Downvotes = c.Downvotes
+                })
+                .ToListAsync();
+
+            return Ok(comments);
+        }
+
+        [HttpGet("discussione/{discussioneId}")]
+        public async Task<IActionResult> GetCommentsForDiscussione(int discussioneId)
+        {
+            var comments = await _context.Commenti
+                .Where(c => c.DiscussioneId == discussioneId)
                 .Include(c => c.Utente)
                 .Select(c => new CommentoReadDto
                 {

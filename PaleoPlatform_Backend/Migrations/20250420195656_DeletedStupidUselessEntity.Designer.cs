@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PaleoPlatform_Backend.Data;
 
@@ -11,9 +12,11 @@ using PaleoPlatform_Backend.Data;
 namespace PaleoPlatform_Backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250420195656_DeletedStupidUselessEntity")]
+    partial class DeletedStupidUselessEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -492,7 +495,7 @@ namespace PaleoPlatform_Backend.Migrations
                         .IsRequired();
 
                     b.HasOne("PaleoPlatform_Backend.Models.Topics", "Topic")
-                        .WithMany()
+                        .WithMany("Discussioni")
                         .HasForeignKey("TopicId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -510,6 +513,11 @@ namespace PaleoPlatform_Backend.Migrations
             modelBuilder.Entity("PaleoPlatform_Backend.Models.Discussione", b =>
                 {
                     b.Navigation("Commenti");
+                });
+
+            modelBuilder.Entity("PaleoPlatform_Backend.Models.Topics", b =>
+                {
+                    b.Navigation("Discussioni");
                 });
 #pragma warning restore 612, 618
         }

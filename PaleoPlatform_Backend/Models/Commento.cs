@@ -11,7 +11,6 @@ namespace PaleoPlatform_Backend.Models
 
         public DateTime DataPubblicazione { get; set; } = DateTime.UtcNow;
 
-        // Foreign key for the user who created the comment
         public string UtenteId { get; set; }
         public ApplicationUser Utente { get; set; }
 
@@ -19,15 +18,14 @@ namespace PaleoPlatform_Backend.Models
         public int? ParentCommentId { get; set; }
         public Commento ParentComment { get; set; }
 
-        // For upvotes and downvotes
         public int Upvotes { get; set; } = 0;
         public int Downvotes { get; set; } = 0;
 
-        // Comments under articles
-        public int ArticoloId { get; set; }  // This is the foreign key to Articoli
-
-        // Navigation property back to Articolo
+        // Foreign keys for related content (Articolo or Discussione)
+        public int? ArticoloId { get; set; }  // This is the foreign key to Articoli
         public Articolo Articolo { get; set; }
 
+        public int? DiscussioneId { get; set; } // FK to Discussione
+        public Discussione Discussione { get; set; }
     }
 }

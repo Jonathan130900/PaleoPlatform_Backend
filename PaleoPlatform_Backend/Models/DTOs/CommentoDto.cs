@@ -5,6 +5,7 @@
         public string Contenuto { get; set; }
         public int? ParentCommentId { get; set; }
         public int? ArticoloId { get; set; }
+        public int? DiscussioneId { get; set; }
     }
 
     public class CommentoReadDto

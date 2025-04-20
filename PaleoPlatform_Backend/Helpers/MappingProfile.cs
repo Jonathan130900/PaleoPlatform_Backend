@@ -10,8 +10,8 @@ namespace PaleoPlatform_Backend.Helpers
         public MappingProfile()
         {
             CreateMap<Articolo, ArticoloReadDto>()
-            .ForMember(dest => dest.AutoreUserName, opt => opt.MapFrom(src => src.Autore.UserName))
-            .ForMember(dest => dest.Commenti, opt => opt.MapFrom(src => src.Commenti));
+                .ForMember(dest => dest.AutoreUserName, opt => opt.MapFrom(src => src.Autore.UserName))
+                .ForMember(dest => dest.Commenti, opt => opt.MapFrom(src => src.Commenti));
 
             CreateMap<Commento, CommentoReadDto>()
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Utente.UserName));
@@ -20,6 +20,11 @@ namespace PaleoPlatform_Backend.Helpers
             CreateMap<ArticoloUpdateDto, Articolo>()
                 .ForMember(dest => dest.CopertinaUrl, opt => opt.Ignore())
                 .ForMember(dest => dest.DataUltimaModifica, opt => opt.Ignore());
+
+            CreateMap<Discussione, DiscussioneReadDto>()
+                .ForMember(dest => dest.AutoreUsername, opt => opt.MapFrom(src => src.Autore.UserName));
+
+            CreateMap<DiscussioneCreateDto, Discussione>();
         }
     }
 }

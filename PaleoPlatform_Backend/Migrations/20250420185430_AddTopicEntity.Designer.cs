@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PaleoPlatform_Backend.Data;
 
@@ -11,9 +12,11 @@ using PaleoPlatform_Backend.Data;
 namespace PaleoPlatform_Backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250420185430_AddTopicEntity")]
+    partial class AddTopicEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -267,7 +270,7 @@ namespace PaleoPlatform_Backend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("ArticoloId")
+                    b.Property<int>("ArticoloId")
                         .HasColumnType("int");
 
                     b.Property<string>("Contenuto")
@@ -345,6 +348,33 @@ namespace PaleoPlatform_Backend.Migrations
                     b.HasIndex("TopicId");
 
                     b.ToTable("Discussione");
+                });
+
+            modelBuilder.Entity("PaleoPlatform_Backend.Models.DiscussioneVoto", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DiscussioneId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UtenteId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Valore")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DiscussioneId");
+
+                    b.HasIndex("UtenteId");
+
+                    b.ToTable("DiscussioneVoto");
                 });
 
             modelBuilder.Entity("PaleoPlatform_Backend.Models.Topics", b =>
@@ -457,7 +487,9 @@ namespace PaleoPlatform_Backend.Migrations
                 {
                     b.HasOne("PaleoPlatform_Backend.Models.Articolo", "Articolo")
                         .WithMany("Commenti")
-                        .HasForeignKey("ArticoloId");
+                        .HasForeignKey("ArticoloId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("PaleoPlatform_Backend.Models.Discussione", "Discussione")
                         .WithMany("Commenti")
@@ -492,7 +524,7 @@ namespace PaleoPlatform_Backend.Migrations
                         .IsRequired();
 
                     b.HasOne("PaleoPlatform_Backend.Models.Topics", "Topic")
-                        .WithMany()
+                        .WithMany("Discussioni")
                         .HasForeignKey("TopicId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -500,6 +532,25 @@ namespace PaleoPlatform_Backend.Migrations
                     b.Navigation("Autore");
 
                     b.Navigation("Topic");
+                });
+
+            modelBuilder.Entity("PaleoPlatform_Backend.Models.DiscussioneVoto", b =>
+                {
+                    b.HasOne("PaleoPlatform_Backend.Models.Discussione", "Discussione")
+                        .WithMany("Voti")
+                        .HasForeignKey("DiscussioneId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PaleoPlatform_Backend.Models.ApplicationUser", "Utente")
+                        .WithMany()
+                        .HasForeignKey("UtenteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Discussione");
+
+                    b.Navigation("Utente");
                 });
 
             modelBuilder.Entity("PaleoPlatform_Backend.Models.Articolo", b =>
@@ -510,6 +561,13 @@ namespace PaleoPlatform_Backend.Migrations
             modelBuilder.Entity("PaleoPlatform_Backend.Models.Discussione", b =>
                 {
                     b.Navigation("Commenti");
+
+                    b.Navigation("Voti");
+                });
+
+            modelBuilder.Entity("PaleoPlatform_Backend.Models.Topics", b =>
+                {
+                    b.Navigation("Discussioni");
                 });
 #pragma warning restore 612, 618
         }

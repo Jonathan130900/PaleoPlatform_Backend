@@ -29,6 +29,12 @@ namespace PaleoPlatform_Backend.Data
                 .WithMany()
                 .HasForeignKey(c => c.UtenteId)
                 .OnDelete(DeleteBehavior.NoAction); // avoid cascade delete on user deletion
+
+            builder.Entity<Commento>()
+                .HasOne(c => c.Discussione)
+                .WithMany(d => d.Commenti)
+                .HasForeignKey(c => c.DiscussioneId)
+                .OnDelete(DeleteBehavior.NoAction);
         }
 
         // Add this line to expose the Files table
@@ -37,5 +43,8 @@ namespace PaleoPlatform_Backend.Data
         // DbSets for your other entities
         public DbSet<Articolo> Articoli { get; set; }
         public DbSet<Commento> Commenti { get; set; }
+        public DbSet<Discussione> Discussione { get; set; }
+        public DbSet<Topics> Topics { get; set; }
+
     }
 }
