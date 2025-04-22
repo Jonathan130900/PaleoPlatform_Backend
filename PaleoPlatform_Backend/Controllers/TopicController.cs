@@ -1,9 +1,12 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using PaleoPlatform_Backend.Data;
 using PaleoPlatform_Backend.Models;
 using PaleoPlatform_Backend.Models.DTOs;
+
 
 namespace PaleoPlatform_Backend.Controllers
 {
@@ -13,12 +16,16 @@ namespace PaleoPlatform_Backend.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IMapper _mapper;
 
-        public TopicsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+
+        public TopicsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IMapper mapper)
         {
             _context = context;
             _userManager = userManager;
+            _mapper = mapper;
         }
+
 
         // Create a new topic (only Admins and Mods can create)
         [HttpPost]
@@ -44,6 +51,13 @@ namespace PaleoPlatform_Backend.Controllers
             });
         }
 
+        [HttpGet("all")]
+        public async Task<ActionResult<IEnumerable<TopicReadDto>>> GetAllTopics()
+        {
+            var topics = await _context.Topics.ToListAsync();
+            var topicDtos = _mapper.Map<List<TopicReadDto>>(topics);
+            return Ok(topicDtos);
+        }
 
         // Get a topic by ID
         [HttpGet("{id}")]

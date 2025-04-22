@@ -20,6 +20,10 @@ namespace PaleoPlatform_Backend.Models.DTOs
 
         public int Score { get; set; }  // Upvotes - Downvotes
         public List<CommentoReadDto> Commenti { get; set; }
+        public int CommentCount { get; set; }
+        public int TopicId { get; set; }
+
+
     }
 
 }

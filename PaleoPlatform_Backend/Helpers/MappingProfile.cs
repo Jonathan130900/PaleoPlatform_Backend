@@ -22,9 +22,15 @@ namespace PaleoPlatform_Backend.Helpers
                 .ForMember(dest => dest.DataUltimaModifica, opt => opt.Ignore());
 
             CreateMap<Discussione, DiscussioneReadDto>()
-                .ForMember(dest => dest.AutoreUsername, opt => opt.MapFrom(src => src.Autore.UserName));
+                .ForMember(dest => dest.AutoreUsername, opt => opt.MapFrom(src => src.Autore.UserName))
+                .ForMember(dest => dest.TopicId, opt => opt.MapFrom(src => src.TopicId));
 
             CreateMap<DiscussioneCreateDto, Discussione>();
+
+            CreateMap<Topics, TopicReadDto>();
+            CreateMap<TopicCreateDto, Topics>();
+
+
         }
     }
 }

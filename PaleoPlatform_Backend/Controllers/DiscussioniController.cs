@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using PaleoPlatform_Backend.Data;
 using PaleoPlatform_Backend.Models.DTOs;
 using PaleoPlatform_Backend.Models;
+using AutoMapper;
 
 namespace PaleoPlatform_Backend.Controllers
 {
@@ -15,11 +16,36 @@ namespace PaleoPlatform_Backend.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IMapper _mapper;
 
-        public DiscussioniController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public DiscussioniController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IMapper mapper)
         {
             _context = context;
             _userManager = userManager;
+            _mapper = mapper;
+        }
+
+        // Get all discussions
+        [HttpGet("all")]
+        public async Task<ActionResult<IEnumerable<DiscussioneReadDto>>> GetAllDiscussioni()
+        {
+            var discussioni = await _context.Discussione
+                .Include(d => d.Autore)
+                .Include(d => d.Topic)
+                .Include(d => d.Commenti) // Eager load comments
+                    .ThenInclude(c => c.Utente) // If you need the comment author's username
+                .ToListAsync();
+
+            var discussioniDto = _mapper.Map<List<DiscussioneReadDto>>(discussioni);
+
+            // Set CommentCount here for each discussion
+            foreach (var dto in discussioniDto)
+            {
+                dto.CommentCount = await _context.Commenti
+                    .CountAsync(c => c.DiscussioneId == dto.Id);
+            }
+
+            return Ok(discussioniDto);
         }
 
         // Get all discussions or filter by topic
@@ -29,6 +55,8 @@ namespace PaleoPlatform_Backend.Controllers
             var query = _context.Discussione
                 .Include(d => d.Autore)
                 .Include(d => d.Topic)
+                .Include(d => d.Commenti) // Eager load comments for this case too
+                    .ThenInclude(c => c.Utente) // Optional: user info in comments
                 .AsQueryable();
 
             if (topicId.HasValue)
@@ -44,7 +72,8 @@ namespace PaleoPlatform_Backend.Controllers
                     d.Upvotes,
                     d.Downvotes,
                     Autore = d.Autore.UserName,
-                    Topic = d.Topic.Nome
+                    Topic = d.Topic.Nome,
+                    CommentCount = _context.Commenti.Count(c => c.DiscussioneId == d.Id) // Include comment count
                 }).ToListAsync();
 
             return Ok(result);
@@ -57,12 +86,14 @@ namespace PaleoPlatform_Backend.Controllers
             var discussion = await _context.Discussione
                 .Include(d => d.Autore)
                 .Include(d => d.Topic)
+                .Include(d => d.Commenti) // Eager load comments for the single discussion
+                    .ThenInclude(c => c.Utente) // Optional: user info in comments
                 .FirstOrDefaultAsync(d => d.Id == id);
 
             if (discussion == null)
                 return NotFound("Discussione non trovata");
 
-            return Ok(new
+            var discussionDto = new
             {
                 discussion.Id,
                 discussion.Titolo,
@@ -71,8 +102,12 @@ namespace PaleoPlatform_Backend.Controllers
                 discussion.Upvotes,
                 discussion.Downvotes,
                 Autore = discussion.Autore.UserName,
-                Topic = discussion.Topic.Nome
-            });
+                Topic = discussion.Topic.Nome,
+                Commenti = _mapper.Map<List<CommentoReadDto>>(discussion.Commenti), // Map comments to DTOs
+                CommentCount = discussion.Commenti.Count // Count of comments
+            };
+
+            return Ok(discussionDto);
         }
 
         // Create new discussion (only if user is not suspended)
@@ -133,5 +168,4 @@ namespace PaleoPlatform_Backend.Controllers
             return Ok(new { discussion.Upvotes, discussion.Downvotes });
         }
     }
-
 }

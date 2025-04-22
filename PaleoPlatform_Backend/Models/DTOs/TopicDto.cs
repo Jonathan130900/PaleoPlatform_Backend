@@ -8,4 +8,10 @@ namespace PaleoPlatform_Backend.Models.DTOs
         public string Nome { get; set; }
     }
 
+    public class TopicReadDto
+    {
+        public int Id { get; set; }
+        public string Nome { get; set; }
+    }
+
 }
