@@ -12,5 +12,7 @@ namespace PaleoPlatform_Backend.Models
     public class ApplicationUser : IdentityUser
     {
         public UserStatus Status { get; set; } = UserStatus.Active;
+        public ICollection<Biglietto> Biglietti { get; set; }
     }
 }
+ 

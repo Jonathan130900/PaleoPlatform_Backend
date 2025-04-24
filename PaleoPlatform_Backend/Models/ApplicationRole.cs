@@ -9,3 +9,4 @@ namespace PaleoPlatform_Backend.Models
         public ApplicationRole(string roleName) : base(roleName) { }
     }
 }
+ 

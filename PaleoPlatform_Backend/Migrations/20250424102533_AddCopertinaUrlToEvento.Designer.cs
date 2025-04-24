@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PaleoPlatform_Backend.Data;
 
@@ -11,9 +12,11 @@ using PaleoPlatform_Backend.Data;
 namespace PaleoPlatform_Backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250424102533_AddCopertinaUrlToEvento")]
+    partial class AddCopertinaUrlToEvento
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -308,18 +311,11 @@ namespace PaleoPlatform_Backend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("DataAcquisto")
-                        .HasColumnType("datetime2");
-
                     b.Property<int>("EventoId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("Pagato")
+                    b.Property<bool>("IsSold")
                         .HasColumnType("bit");
-
-                    b.Property<decimal>("Prezzo")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("UtenteId")
                         .IsRequired()
@@ -420,34 +416,6 @@ namespace PaleoPlatform_Backend.Migrations
                     b.HasIndex("TopicId");
 
                     b.ToTable("Discussione");
-                });
-
-            modelBuilder.Entity("PaleoPlatform_Backend.Models.EventoPartecipazione", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("DataPartecipazione")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("EventoId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UtenteId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EventoId");
-
-                    b.HasIndex("UtenteId", "EventoId")
-                        .IsUnique();
-
-                    b.ToTable("EventoPartecipazioni");
                 });
 
             modelBuilder.Entity("PaleoPlatform_Backend.Models.Topics", b =>
@@ -565,7 +533,7 @@ namespace PaleoPlatform_Backend.Migrations
                         .IsRequired();
 
                     b.HasOne("PaleoPlatform_Backend.Models.ApplicationUser", "Utente")
-                        .WithMany("Biglietti")
+                        .WithMany()
                         .HasForeignKey("UtenteId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -624,33 +592,7 @@ namespace PaleoPlatform_Backend.Migrations
                     b.Navigation("Topic");
                 });
 
-            modelBuilder.Entity("PaleoPlatform_Backend.Models.EventoPartecipazione", b =>
-                {
-                    b.HasOne("Evento", "Evento")
-                        .WithMany("Partecipazioni")
-                        .HasForeignKey("EventoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PaleoPlatform_Backend.Models.ApplicationUser", "Utente")
-                        .WithMany()
-                        .HasForeignKey("UtenteId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Evento");
-
-                    b.Navigation("Utente");
-                });
-
             modelBuilder.Entity("Evento", b =>
-                {
-                    b.Navigation("Biglietti");
-
-                    b.Navigation("Partecipazioni");
-                });
-
-            modelBuilder.Entity("PaleoPlatform_Backend.Models.ApplicationUser", b =>
                 {
                     b.Navigation("Biglietti");
                 });

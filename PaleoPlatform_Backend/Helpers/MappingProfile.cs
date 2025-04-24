@@ -30,6 +30,18 @@ namespace PaleoPlatform_Backend.Helpers
             CreateMap<Topics, TopicReadDto>();
             CreateMap<TopicCreateDto, Topics>();
 
+            CreateMap<BigliettoCreateDto, Biglietto>(); 
+            CreateMap<Biglietto, BigliettoReadDto>();
+
+            CreateMap<EventoCreateDto, Evento>();
+            CreateMap<Evento, EventoReadDto>();
+            CreateMap<EventoUpdateDto, Evento>();
+
+            CreateMap<EventoPartecipazioneCreateDto, EventoPartecipazione>();
+
+
+
+             
 
         }
     }

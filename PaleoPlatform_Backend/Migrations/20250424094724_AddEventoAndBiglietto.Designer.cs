@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PaleoPlatform_Backend.Data;
 
@@ -11,9 +12,11 @@ using PaleoPlatform_Backend.Data;
 namespace PaleoPlatform_Backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250424094724_AddEventoAndBiglietto")]
+    partial class AddEventoAndBiglietto
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,47 +24,6 @@ namespace PaleoPlatform_Backend.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("Evento", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("CopertinaUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("DataFine")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("DataInizio")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Descrizione")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Luogo")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Nome")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("PostiDisponibili")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("Prezzo")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Eventi");
-                });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
@@ -308,18 +270,11 @@ namespace PaleoPlatform_Backend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("DataAcquisto")
-                        .HasColumnType("datetime2");
-
                     b.Property<int>("EventoId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("Pagato")
+                    b.Property<bool>("IsSold")
                         .HasColumnType("bit");
-
-                    b.Property<decimal>("Prezzo")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("UtenteId")
                         .IsRequired()
@@ -422,7 +377,7 @@ namespace PaleoPlatform_Backend.Migrations
                     b.ToTable("Discussione");
                 });
 
-            modelBuilder.Entity("PaleoPlatform_Backend.Models.EventoPartecipazione", b =>
+            modelBuilder.Entity("PaleoPlatform_Backend.Models.Evento", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -430,24 +385,34 @@ namespace PaleoPlatform_Backend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("DataPartecipazione")
+                    b.Property<DateTime>("DataFine")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("EventoId")
+                    b.Property<DateTime>("DataInizio")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Descrizione")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Luogo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PostiDisponibili")
                         .HasColumnType("int");
 
-                    b.Property<string>("UtenteId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<decimal>("Prezzo")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EventoId");
-
-                    b.HasIndex("UtenteId", "EventoId")
-                        .IsUnique();
-
-                    b.ToTable("EventoPartecipazioni");
+                    b.ToTable("Eventi");
                 });
 
             modelBuilder.Entity("PaleoPlatform_Backend.Models.Topics", b =>
@@ -558,14 +523,14 @@ namespace PaleoPlatform_Backend.Migrations
 
             modelBuilder.Entity("PaleoPlatform_Backend.Models.Biglietto", b =>
                 {
-                    b.HasOne("Evento", "Evento")
+                    b.HasOne("PaleoPlatform_Backend.Models.Evento", "Evento")
                         .WithMany("Biglietti")
                         .HasForeignKey("EventoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("PaleoPlatform_Backend.Models.ApplicationUser", "Utente")
-                        .WithMany("Biglietti")
+                        .WithMany()
                         .HasForeignKey("UtenteId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -624,37 +589,6 @@ namespace PaleoPlatform_Backend.Migrations
                     b.Navigation("Topic");
                 });
 
-            modelBuilder.Entity("PaleoPlatform_Backend.Models.EventoPartecipazione", b =>
-                {
-                    b.HasOne("Evento", "Evento")
-                        .WithMany("Partecipazioni")
-                        .HasForeignKey("EventoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PaleoPlatform_Backend.Models.ApplicationUser", "Utente")
-                        .WithMany()
-                        .HasForeignKey("UtenteId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Evento");
-
-                    b.Navigation("Utente");
-                });
-
-            modelBuilder.Entity("Evento", b =>
-                {
-                    b.Navigation("Biglietti");
-
-                    b.Navigation("Partecipazioni");
-                });
-
-            modelBuilder.Entity("PaleoPlatform_Backend.Models.ApplicationUser", b =>
-                {
-                    b.Navigation("Biglietti");
-                });
-
             modelBuilder.Entity("PaleoPlatform_Backend.Models.Articolo", b =>
                 {
                     b.Navigation("Commenti");
@@ -663,6 +597,11 @@ namespace PaleoPlatform_Backend.Migrations
             modelBuilder.Entity("PaleoPlatform_Backend.Models.Discussione", b =>
                 {
                     b.Navigation("Commenti");
+                });
+
+            modelBuilder.Entity("PaleoPlatform_Backend.Models.Evento", b =>
+                {
+                    b.Navigation("Biglietti");
                 });
 #pragma warning restore 612, 618
         }

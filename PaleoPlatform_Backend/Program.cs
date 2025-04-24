@@ -98,7 +98,9 @@ builder.Services.AddAutoMapper(typeof(Program).Assembly);
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<IArticoloService, ArticoloService>();
 builder.Services.AddScoped<IUtenteService, UtenteService>();
+builder.Services.AddScoped<IStripeService, StripeService>();
 
+ 
 
 var app = builder.Build();
 
