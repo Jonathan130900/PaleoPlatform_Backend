@@ -40,8 +40,9 @@ namespace PaleoPlatform_Backend.Helpers
             CreateMap<EventoPartecipazioneCreateDto, EventoPartecipazione>();
 
 
+            CreateMap<Prodotto, ProdottoReadDto>();
+            CreateMap<ProdottoCreateDto, Prodotto>();
 
-             
 
         }
     }

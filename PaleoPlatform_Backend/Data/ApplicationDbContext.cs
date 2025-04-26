@@ -37,12 +37,11 @@ namespace PaleoPlatform_Backend.Data
                 .HasForeignKey(c => c.DiscussioneId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            builder.Entity<Biglietto>()
-                .HasOne(b => b.Evento)
-                .WithMany(e => e.Biglietti)
-                .HasForeignKey(b => b.EventoId);
-
             var biglietto = builder.Entity<Biglietto>();
+
+            biglietto.HasOne(b => b.Evento)
+                     .WithMany(e => e.Biglietti)
+                     .HasForeignKey(b => b.EventoId);
 
             biglietto.HasOne(b => b.Utente)
                      .WithMany(u => u.Biglietti)
@@ -58,8 +57,12 @@ namespace PaleoPlatform_Backend.Data
             builder.Entity<EventoPartecipazione>()
                 .HasIndex(p => new { p.UtenteId, p.EventoId })
                 .IsUnique();
+
+            builder.Entity<Prodotto>()
+                .Property(p => p.Prezzo)
+                .HasPrecision(10, 2);
         }
-         
+
         // Add this line to expose the Files table
         public DbSet<UploadedFile> Files { get; set; }
 
@@ -71,8 +74,6 @@ namespace PaleoPlatform_Backend.Data
         public DbSet<Evento> Eventi { get; set; }
         public DbSet<Biglietto> Biglietti { get; set; }
         public DbSet<EventoPartecipazione> EventoPartecipazioni { get; set; }
-
-
-
+        public DbSet<Prodotto> Prodotti { get; set; }
     }
 }
