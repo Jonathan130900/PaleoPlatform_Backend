@@ -11,5 +11,6 @@
 
         public ApplicationUser Utente { get; set; }  // Navigation property for user
         public Evento Evento { get; set; }           // Navigation property for event
+        public string StripePaymentIntentId { get; set; }
     }
 }

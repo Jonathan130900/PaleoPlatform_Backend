@@ -22,19 +22,22 @@ namespace PaleoPlatform_Backend.Services
         {
             var roles = await _userManager.GetRolesAsync(user);
             var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id),
-                new Claim(ClaimTypes.Email, user.Email)
-            };
+    {
+        new Claim(ClaimTypes.NameIdentifier, user.Id),
+        new Claim("id", user.Id), // Add this line for backward compatibility
+        new Claim(JwtRegisteredClaimNames.Sub, user.Id), // Standard JWT subject claim
+        new Claim(ClaimTypes.Email, user.Email),
+        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()) // Unique token ID
+    };
 
             claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("SuperSecretKeyThatIsLongEnough123456789")); 
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("SuperSecretKeyThatIsLongEnough123456789"));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
-                issuer: _config["Jwt:Issuer"],
-                audience: _config["Jwt:Audience"],
+                issuer: "PaleoPlatformAPI",
+                audience: "PaleoPlatformClient",
                 claims: claims,
                 expires: DateTime.UtcNow.AddDays(1),
                 signingCredentials: creds

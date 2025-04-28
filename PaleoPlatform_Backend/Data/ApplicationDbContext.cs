@@ -75,5 +75,8 @@ namespace PaleoPlatform_Backend.Data
         public DbSet<Biglietto> Biglietti { get; set; }
         public DbSet<EventoPartecipazione> EventoPartecipazioni { get; set; }
         public DbSet<Prodotto> Prodotti { get; set; }
+        public DbSet<Carrello> Carrelli { get; set; }
+        public DbSet<CarrelloItem> CarrelloItems { get; set; }
+
     }
 }

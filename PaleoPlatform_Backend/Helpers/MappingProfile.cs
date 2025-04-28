@@ -44,6 +44,17 @@ namespace PaleoPlatform_Backend.Helpers
             CreateMap<ProdottoCreateDto, Prodotto>();
 
 
+            
+            CreateMap<Carrello, CarrelloReadDto>()
+                .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.Items));
+
+            CreateMap<CarrelloItem, CarrelloItemReadDto>()
+                .ForMember(dest => dest.NomeProdotto, opt => opt.MapFrom(src => src.Prodotto.Nome))
+                .ForMember(dest => dest.Prezzo, opt => opt.MapFrom(src => src.Prodotto.Prezzo))
+                .ForMember(dest => dest.ProdottoId, opt => opt.MapFrom(src => src.ProdottoId))
+                .ForMember(dest => dest.Quantità, opt => opt.MapFrom(src => src.Quantità));
+
+
         }
     }
 }

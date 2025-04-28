@@ -85,11 +85,11 @@ namespace PaleoPlatform_Backend.Services
                 discussion.AutoreId = deletedUser.Id;
 
             // Clean up other stuff (e.g., event tickets)
-            //var biglietti = await _context.Biglietti
-            //  .Where(b => b.UtenteId == userToDelete.Id)
-            //.ToListAsync();
-            // foreach (var b in biglietti)
-            //   b.UtenteId = deletedUser.Id;
+            var biglietti = await _context.Biglietti
+              .Where(b => b.UtenteId == userToDelete.Id)
+              .ToListAsync();
+               foreach (var b in biglietti)
+               b.UtenteId = deletedUser.Id;
 
             await _context.SaveChangesAsync();
 

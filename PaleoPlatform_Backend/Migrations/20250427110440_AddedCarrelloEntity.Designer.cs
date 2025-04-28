@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PaleoPlatform_Backend.Data;
 
@@ -11,9 +12,11 @@ using PaleoPlatform_Backend.Data;
 namespace PaleoPlatform_Backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250427110440_AddedCarrelloEntity")]
+    partial class AddedCarrelloEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -321,10 +324,6 @@ namespace PaleoPlatform_Backend.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("StripePaymentIntentId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("UtenteId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -345,19 +344,6 @@ namespace PaleoPlatform_Backend.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("DataCreazione")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DataPagamento")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("Pagato")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("StripeCheckoutSessionId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UtenteId")
                         .IsRequired()
@@ -384,10 +370,6 @@ namespace PaleoPlatform_Backend.Migrations
 
                     b.Property<int>("Quantità")
                         .HasColumnType("int");
-
-                    b.Property<string>("UtenteId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
