@@ -68,7 +68,7 @@ namespace PaleoPlatform_Backend.Controllers
 
             try
             {
-                var created = await _service.CreateAsync(articolo, dto.Copertina); // ✅ pass IFormFile correctly
+                var created = await _service.CreateAsync(articolo, dto.Copertina); // pass IFormFile correctly
                 var readDto = _mapper.Map<ArticoloReadDto>(created);
                 return Ok(readDto);
             }

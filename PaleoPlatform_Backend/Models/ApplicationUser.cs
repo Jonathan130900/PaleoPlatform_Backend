@@ -6,12 +6,14 @@ namespace PaleoPlatform_Backend.Models
     {
         Active,
         Suspended,
-        Banned
+        Banned,
+        System
     }
 
     public class ApplicationUser : IdentityUser
     {
         public UserStatus Status { get; set; } = UserStatus.Active;
+        public DateTime? SuspendedUntil { get; set; }
         public ICollection<Biglietto> Biglietti { get; set; }
     }
 }

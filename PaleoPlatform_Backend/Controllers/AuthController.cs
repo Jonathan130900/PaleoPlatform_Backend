@@ -37,33 +37,11 @@ namespace PaleoPlatform_Backend.Controllers
             _context = context;
         }
 
-        [Authorize(Roles = "Amministratore")]
-        [HttpGet("admin-users")]
-        public async Task<IActionResult> GetAdminUsers()
-        {
-            var users = await _userManager.Users.ToListAsync();  // Fetch all users first
-
-            // Now filter the users with the role check being awaited inside a loop or LINQ method.
-            var filteredUsers = new List<ApplicationUser>();
-
-            foreach (var user in users)
-            {
-                // Check if the user is not '[deleted]' and does not have the 'System' role
-                if (!user.UserName.Equals("[deleted]") &&
-                    !await _userManager.IsInRoleAsync(user, "System"))
-                {
-                    filteredUsers.Add(user);
-                }
-            }
-
-            return Ok(filteredUsers);
-        }
-
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto dto)
         {
             var user = await _userManager.FindByEmailAsync(dto.Email);
-            if (user == null || !await _userManager.CheckPasswordAsync(user, dto.Password))
+            if (user == null || !await _userManager.CheckPasswordAsync(user, dto.Password) || await _userManager.IsInRoleAsync(user, "System"))
                 return Unauthorized("Credenziali invalide");
 
             var token = await _jwtService.GenerateTokenAsync(user);
@@ -73,15 +51,26 @@ namespace PaleoPlatform_Backend.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegistrazioneDto dto)
         {
+            // Check if email already exists
+            var existingEmail = await _userManager.FindByEmailAsync(dto.Email);
+            if (existingEmail != null)
+                return BadRequest("Email già in uso.");
+
+            // Check if username already exists
+            var existingUsername = await _userManager.Users.FirstOrDefaultAsync(u => u.UserName == dto.Username);
+            if (existingUsername != null)
+                return BadRequest("Username già in uso.");
+
+            // Protect special usernames
+            var normalizedUsername = dto.Username.Trim().ToLower();
+            if (normalizedUsername == "deleted_user" || normalizedUsername == "banned_user")
+                return BadRequest("Username non disponibile.");
+
             var user = new ApplicationUser
             {
                 UserName = dto.Username,
                 Email = dto.Email
             };
-
-            var existingEmail = await _userManager.FindByEmailAsync(dto.Email);
-            if (existingEmail != null)
-                return BadRequest("Email già in uso.");
 
             var result = await _userManager.CreateAsync(user, dto.Password);
             if (!result.Succeeded)
@@ -89,13 +78,11 @@ namespace PaleoPlatform_Backend.Controllers
                 return BadRequest(result.Errors);
             }
 
-            // Ensure the "Utente" role exists
             if (!await _roleManager.RoleExistsAsync("Utente"))
             {
                 await _roleManager.CreateAsync(new ApplicationRole("Utente"));
             }
 
-            // Assign default role
             await _userManager.AddToRoleAsync(user, "Utente");
 
             var token = await _jwtService.GenerateTokenAsync(user);
@@ -216,6 +203,65 @@ namespace PaleoPlatform_Backend.Controllers
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var claims = identity?.Claims.Select(c => new { c.Type, c.Value });
             return Ok(claims);
+        }
+
+        [Authorize(Roles = "Amministratore,Moderatore")]
+        [HttpPost("banna-utente")]
+        public async Task<IActionResult> BannaUtente(SospendiUtenteDto dto)
+        {
+            var success = await _utenteService.BanUserAsync(dto.UtenteId, User.FindFirst("id")?.Value);
+
+            if (!success)
+                return BadRequest("Impossibile bannare l'utente.");
+
+            return Ok("Utente bannato con successo.");
+        }
+
+        [Authorize(Roles = "Amministratore,Moderatore")]
+        [HttpPost("riattiva-utente")]
+        public async Task<IActionResult> RiattivaUtente(SospendiUtenteDto dto)
+        {
+            var success = await _utenteService.ReactivateUserAsync(dto.UtenteId, User.FindFirst("id")?.Value);
+
+            if (!success)
+                return BadRequest("Impossibile riattivare l'utente.");
+
+            return Ok("Utente riattivato con successo.");
+        }
+
+        [Authorize(Roles = "Amministratore,Moderatore")]
+        [HttpPost("sospendi-utente")]
+        public async Task<IActionResult> SospendiUtente(SospendiUtenteDto dto)
+        {
+            var success = await _utenteService.SuspendUserAsync(dto.UtenteId, User.FindFirst("id")?.Value);
+
+            if (!success)
+                return BadRequest("Impossibile sospendere l'utente.");
+
+            return Ok("Utente sospeso con successo.");
+        }
+
+
+        [Authorize(Roles = "Amministratore")]
+        [HttpGet("admin-users")]
+        public async Task<IActionResult> GetAdminUsers()
+        {
+            var users = await _userManager.Users.ToListAsync();  // Fetch all users first
+
+            // Now filter the users with the role check being awaited inside a loop or LINQ method.
+            var filteredUsers = new List<ApplicationUser>();
+
+            foreach (var user in users)
+            {
+                // Check if the user is not '[deleted]' and does not have the 'System' role
+                if (!user.UserName.Equals("[deleted]") &&
+                    !await _userManager.IsInRoleAsync(user, "System"))
+                {
+                    filteredUsers.Add(user);
+                }
+            }
+
+            return Ok(filteredUsers);
         }
 
 

@@ -26,7 +26,7 @@ namespace PaleoPlatform_Backend.Services
             await _context.SaveChangesAsync();
 
             // Now use the ID for the file path
-            var articleFolder = Path.Combine(_environment.WebRootPath, "uploads", $"{articolo.Id}_{articolo.Titolo}");
+            var articleFolder = Path.Combine(_environment.WebRootPath, "uploads", $"{articolo.Titolo}");
             if (!Directory.Exists(articleFolder))
                 Directory.CreateDirectory(articleFolder);
 
@@ -41,7 +41,7 @@ namespace PaleoPlatform_Backend.Services
 
                 await SaveFileAsync(copertinaFile, thumbnailFilePath);
 
-                articolo.CopertinaUrl = $"/uploads/{articolo.Id}_{articolo.Titolo}/thumbnail/{thumbnailFileName}";
+                articolo.CopertinaUrl = $"/uploads/{articolo.Titolo}/thumbnail/{thumbnailFileName}";
 
                 // Update the articolo with the new URL
                 _context.Articoli.Update(articolo);
@@ -71,7 +71,7 @@ namespace PaleoPlatform_Backend.Services
 
         public async Task<string> HandleFileUploadAsync(IFormFile copertinaFile, Articolo articolo)
         {
-            var articleFolder = Path.Combine(_environment.WebRootPath, "uploads", $"{articolo.Id}_{articolo.Titolo}");
+            var articleFolder = Path.Combine(_environment.WebRootPath, "uploads", $"{articolo.Titolo}");
             if (!Directory.Exists(articleFolder))
                 Directory.CreateDirectory(articleFolder);
 
@@ -84,7 +84,7 @@ namespace PaleoPlatform_Backend.Services
 
             await SaveFileAsync(copertinaFile, filePath);
 
-            return $"/uploads/{articolo.Id}_{articolo.Titolo}/thumbnail/{fileName}";
+            return $"/uploads/{articolo.Titolo}/thumbnail/{fileName}";
         }
 
         public async Task<string> SaveInlineImageAsync(IFormFile file)

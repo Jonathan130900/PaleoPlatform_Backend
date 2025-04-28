@@ -75,6 +75,26 @@ namespace PaleoPlatform_Backend.Helpers
                     Console.WriteLine($"Assigned '[deleted]' user to 'System' role: {addToRole.Succeeded}");
                 }
             }
+            string bannedEmail = "banned_user@banned.com";
+            var bannedUser = await userManager.FindByEmailAsync(bannedEmail);
+            if (bannedUser == null)
+            {
+                var banned = new ApplicationUser
+                {
+                    UserName = "banned_user",
+                    Email = bannedEmail,
+                    EmailConfirmed = true,
+                    Status = UserStatus.Banned // (optional, but good idea to make this clear)
+                };
+                var result = await userManager.CreateAsync(banned, "FakePassword123!");
+                Console.WriteLine($"Created 'banned_user' user: {result.Succeeded}");
+
+                if (result.Succeeded)
+                {
+                    var addToRole = await userManager.AddToRoleAsync(banned, "System");
+                    Console.WriteLine($"Assigned 'banned_user' to 'System' role: {addToRole.Succeeded}");
+                }
+            }
         }
     }
 
