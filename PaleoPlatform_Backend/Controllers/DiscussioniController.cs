@@ -33,12 +33,12 @@ namespace PaleoPlatform_Backend.Controllers
                 .Include(d => d.Autore)
                 .Include(d => d.Topic)
                 .Include(d => d.Commenti) // Eager load comments
-                    .ThenInclude(c => c.Utente) // If you need the comment author's username
+                    .ThenInclude(c => c.Utente) //  Author's comment username
                 .ToListAsync();
 
             var discussioniDto = _mapper.Map<List<DiscussioneReadDto>>(discussioni);
 
-            // Set CommentCount here for each discussion
+            // CommentCount for each discussion
             foreach (var dto in discussioniDto)
             {
                 dto.CommentCount = await _context.Commenti
@@ -55,8 +55,8 @@ namespace PaleoPlatform_Backend.Controllers
             var query = _context.Discussione
                 .Include(d => d.Autore)
                 .Include(d => d.Topic)
-                .Include(d => d.Commenti) // Eager load comments for this case too
-                    .ThenInclude(c => c.Utente) // Optional: user info in comments
+                .Include(d => d.Commenti) // Eager load comments again
+                    .ThenInclude(c => c.Utente) // User info in comments
                 .AsQueryable();
 
             if (topicId.HasValue)
@@ -86,8 +86,8 @@ namespace PaleoPlatform_Backend.Controllers
             var discussion = await _context.Discussione
                 .Include(d => d.Autore)
                 .Include(d => d.Topic)
-                .Include(d => d.Commenti) // Eager load comments for the single discussion
-                    .ThenInclude(c => c.Utente) // Optional: user info in comments
+                .Include(d => d.Commenti) // Eager load comments AGAIN
+                    .ThenInclude(c => c.Utente) // User info in comments
                 .FirstOrDefaultAsync(d => d.Id == id);
 
             if (discussion == null)

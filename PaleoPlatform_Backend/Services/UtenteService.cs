@@ -42,7 +42,7 @@ namespace PaleoPlatform_Backend.Services
             if (!isRequesterAdmin)
                 return false;
 
-            // Get or create '[deleted]' user
+            // Get or create 'deleted_user'
             var deletedUser = await _userManager.FindByNameAsync("deleted_user");
             if (deletedUser == null)
             {
@@ -56,7 +56,7 @@ namespace PaleoPlatform_Backend.Services
                 if (!result.Succeeded)
                     return false;
 
-                // Lock the [deleted] user account permanently
+                // Lock the deleted_user account permanently
                 await _userManager.SetLockoutEnabledAsync(deletedUser, true);
                 await _userManager.SetLockoutEndDateAsync(deletedUser, DateTimeOffset.MaxValue);
             }

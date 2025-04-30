@@ -21,11 +21,9 @@ namespace PaleoPlatform_Backend.Services
             if (autore == null)
                 throw new ArgumentException("Autore not found");
 
-            // Save articolo first to get the ID
             _context.Articoli.Add(articolo);
             await _context.SaveChangesAsync();
 
-            // Now use the ID for the file path
             var articleFolder = Path.Combine(_environment.WebRootPath, "uploads", $"{articolo.Titolo}");
             if (!Directory.Exists(articleFolder))
                 Directory.CreateDirectory(articleFolder);
@@ -125,13 +123,12 @@ namespace PaleoPlatform_Backend.Services
         public async Task<IEnumerable<Articolo>> GetAllAsync()
         {
             return await _context.Articoli
-                .Include(a => a.Commenti)  // Eagerly load comments
-                .ThenInclude(c => c.Utente) // If you want to include user info for comments
-                .Include(a => a.Autore)    // Eagerly load the article's author as well
+                .Include(a => a.Commenti) // Eagerly load comments
+                .ThenInclude(c => c.Utente) // User info for comments
+                .Include(a => a.Autore) // Load article's author as well
                 .ToListAsync();
         }
 
-        // Modify GetByIdAsync to eagerly load comments and their users
         public async Task<Articolo?> GetByIdAsync(int id)
         {
             return await _context.Articoli

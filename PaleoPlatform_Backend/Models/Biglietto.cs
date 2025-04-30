@@ -3,14 +3,14 @@
     public class Biglietto
     {
         public int Id { get; set; }
-        public string UtenteId { get; set; }  // User ID who bought the ticket
-        public int EventoId { get; set; }     // Event ID
-        public bool Pagato { get; set; }      // Payment status
-        public decimal Prezzo { get; set; }   // Price of the ticket 
-        public DateTime DataAcquisto { get; set; } // Purchase date
+        public string UtenteId { get; set; }
+        public int EventoId { get; set; }
+        public bool Pagato { get; set; }
+        public decimal Prezzo { get; set; }
+        public DateTime DataAcquisto { get; set; }
 
-        public ApplicationUser Utente { get; set; }  // Navigation property for user
-        public Evento Evento { get; set; }           // Navigation property for event
+        public ApplicationUser Utente { get; set; }
+        public Evento Evento { get; set; }
         public string StripePaymentIntentId { get; set; }
     }
 }

@@ -63,10 +63,8 @@ namespace PaleoPlatform_Backend.Data
                 .HasPrecision(10, 2);
         }
 
-        // Add this line to expose the Files table
+        // DbSets for entities
         public DbSet<UploadedFile> Files { get; set; }
-
-        // DbSets for your other entities
         public DbSet<Articolo> Articoli { get; set; }
         public DbSet<Commento> Commenti { get; set; }
         public DbSet<Discussione> Discussione { get; set; }

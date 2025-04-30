@@ -10,7 +10,7 @@
         public decimal Prezzo { get; set; }
         public int PostiDisponibili { get; set; }
 
-        public IFormFile? Copertina { get; set; } // <-- Add this
+        public IFormFile? Copertina { get; set; }
     }
 
 
@@ -38,6 +38,6 @@
         public decimal? Prezzo { get; set; }
         public int? PostiDisponibili { get; set; }
 
-        public IFormFile? Copertina { get; set; } // <-- Add this
+        public IFormFile? Copertina { get; set; }
     }
 }

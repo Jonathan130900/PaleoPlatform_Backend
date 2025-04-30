@@ -16,6 +16,16 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173") // The URL of the frontend
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
 {
     options.Password.RequireNonAlphanumeric = false;
@@ -91,10 +101,10 @@ builder.Services.AddSwaggerGen(c =>
     c.OperationFilter<FileUploadOperationFilter>();
 });
 
-// Add AutoMapper
+// AutoMapper
 builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
-// Add custom services
+// Custom services
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<IArticoloService, ArticoloService>();
 builder.Services.AddScoped<IUtenteService, UtenteService>();
@@ -114,6 +124,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
@@ -137,7 +148,7 @@ using (var scope = app.Services.CreateScope())
 
 app.Run();
 
-// Move all class declarations to the end of the file
+// Class declarations
 public class FileUploadOperationFilter : IOperationFilter
 {
     public void Apply(OpenApiOperation operation, OperationFilterContext context)

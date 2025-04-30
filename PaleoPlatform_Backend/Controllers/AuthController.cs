@@ -248,7 +248,7 @@ namespace PaleoPlatform_Backend.Controllers
         {
             var users = await _userManager.Users.ToListAsync();  // Fetch all users first
 
-            // Now filter the users with the role check being awaited inside a loop or LINQ method.
+            // Filter the users with the role check being awaited inside a loop or LINQ method.
             var filteredUsers = new List<ApplicationUser>();
 
             foreach (var user in users)

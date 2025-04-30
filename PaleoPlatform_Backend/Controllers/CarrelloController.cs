@@ -18,7 +18,7 @@ namespace PaleoPlatform_Backend.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
-        private readonly string _frontendDomain = "http://localhost:3000"; // <-- you can move this to config later
+        private readonly string _frontendDomain = "http://localhost:3000"; // <-- move this to config later
 
         public CarrelloController(ApplicationDbContext context, IMapper mapper)
         {

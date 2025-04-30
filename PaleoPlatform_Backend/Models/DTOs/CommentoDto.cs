@@ -12,7 +12,7 @@
     {
         public int Id { get; set; }
         public string Contenuto { get; set; }
-        public string UserName { get; set; } // Include UserName here for displaying purposes
+        public string UserName { get; set; }
         public DateTime CreatedAt { get; set; }
         public int? ParentCommentId { get; set; }
         public int Upvotes { get; set; }

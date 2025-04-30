@@ -24,7 +24,7 @@ namespace PaleoPlatform_Backend.Services
             var claims = new List<Claim>
     {
         new Claim(ClaimTypes.NameIdentifier, user.Id),
-        new Claim("id", user.Id), // Add this line for backward compatibility
+        new Claim("id", user.Id), // Backward compatibility
         new Claim(JwtRegisteredClaimNames.Sub, user.Id), // Standard JWT subject claim
         new Claim(ClaimTypes.Email, user.Email),
         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()) // Unique token ID

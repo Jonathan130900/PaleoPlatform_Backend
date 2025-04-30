@@ -18,7 +18,7 @@ namespace PaleoPlatform_Backend.Models.DTOs
         public string AutoreUsername { get; set; } = string.Empty;
         public DateTime DataCreazione { get; set; }
 
-        public int Score { get; set; }  // Upvotes - Downvotes
+        public int Score { get; set; } // Upvotes - Downvotes
         public List<CommentoReadDto> Commenti { get; set; }
         public int CommentCount { get; set; }
         public int TopicId { get; set; }

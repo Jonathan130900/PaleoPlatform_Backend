@@ -113,7 +113,7 @@ namespace PaleoPlatform_Backend.Controllers
             });
         }
 
-        // Get comments (paginated if needed, modify as per your use case)
+        // Get comments
         [HttpGet]
         public async Task<IActionResult> GetAllComments()
         {
@@ -144,7 +144,7 @@ namespace PaleoPlatform_Backend.Controllers
             if (articolo == null)
                 return NotFound("Articolo non trovato");
 
-            // Ensure only one of the two IDs is provided (either ArticoloId or DiscussioneId)
+            // Only one of the two IDs is provided (either ArticoloId or DiscussioneId)
             if (dto.DiscussioneId.HasValue)
                 return BadRequest("You cannot specify a DiscussioneId when commenting on an Articolo");
 
@@ -183,7 +183,7 @@ namespace PaleoPlatform_Backend.Controllers
             if (discussione == null)
                 return NotFound("Discussione non trovata");
 
-            // Ensure only one of the two IDs is provided (either ArticoloId or DiscussioneId)
+            // Only one of the two IDs is provided (either ArticoloId or DiscussioneId)
             if (dto.ArticoloId.HasValue)
                 return BadRequest("You cannot specify an ArticoloId when commenting on a Discussione");
 

@@ -45,11 +45,11 @@ namespace PaleoPlatform_Backend.Controllers
 
                 switch (stripeEvent.Type)
                 {
-                    case "payment_intent.succeeded":  // Changed from Events.PaymentIntentSucceeded
+                    case "payment_intent.succeeded":
                         var paymentIntent = stripeEvent.Data.Object as PaymentIntent;
                         await HandlePaymentIntentSucceeded(paymentIntent);
                         break;
-                    case "checkout.session.completed":  // Changed from Events.CheckoutSessionCompleted
+                    case "checkout.session.completed":
                         var session = stripeEvent.Data.Object as Stripe.Checkout.Session;
                         await HandleCheckoutSessionCompleted(session);
                         break;

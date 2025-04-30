@@ -12,7 +12,7 @@ namespace PaleoPlatform_Backend.Helpers
             var roleManager = serviceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
             var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-            string[] roles = { "Utente", "Moderatore", "Amministratore", "System" }; // Added "System" role
+            string[] roles = { "Utente", "Moderatore", "Amministratore", "System" };
 
             foreach (var role in roles)
             {
@@ -70,9 +70,9 @@ namespace PaleoPlatform_Backend.Helpers
 
                 if (result.Succeeded)
                 {
-                    // Assign the "System" role to the [deleted] user
+                    // Assign the "System" role to deleted_user
                     var addToRole = await userManager.AddToRoleAsync(deleted, "System");
-                    Console.WriteLine($"Assigned '[deleted]' user to 'System' role: {addToRole.Succeeded}");
+                    Console.WriteLine($"Assigned 'deleted_user' to 'System' role: {addToRole.Succeeded}");
                 }
             }
             string bannedEmail = "banned_user@banned.com";
@@ -84,13 +84,14 @@ namespace PaleoPlatform_Backend.Helpers
                     UserName = "banned_user",
                     Email = bannedEmail,
                     EmailConfirmed = true,
-                    Status = UserStatus.Banned // (optional, but good idea to make this clear)
+                    Status = UserStatus.Banned
                 };
                 var result = await userManager.CreateAsync(banned, "FakePassword123!");
                 Console.WriteLine($"Created 'banned_user' user: {result.Succeeded}");
 
                 if (result.Succeeded)
                 {
+                    // Assign the "System" role to banned_user
                     var addToRole = await userManager.AddToRoleAsync(banned, "System");
                     Console.WriteLine($"Assigned 'banned_user' to 'System' role: {addToRole.Succeeded}");
                 }
