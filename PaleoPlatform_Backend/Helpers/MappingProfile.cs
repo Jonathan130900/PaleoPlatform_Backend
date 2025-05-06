@@ -11,6 +11,7 @@ namespace PaleoPlatform_Backend.Helpers
         {
             CreateMap<Articolo, ArticoloReadDto>()
                 .ForMember(dest => dest.AutoreUserName, opt => opt.MapFrom(src => src.Autore.UserName))
+                .ForMember(dest => dest.CopertinaUrl, opt => opt.MapFrom(src => src.CopertinaUrl))
                 .ForMember(dest => dest.Commenti, opt => opt.MapFrom(src => src.Commenti));
 
             CreateMap<Commento, CommentoReadDto>()

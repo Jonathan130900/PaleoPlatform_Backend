@@ -9,6 +9,8 @@ using AutoMapper;
 using PaleoPlatform_Backend.Services;
 using Microsoft.AspNetCore.Http;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -126,7 +128,33 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
-app.UseStaticFiles();
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(builder.Environment.WebRootPath, "uploads")),
+    RequestPath = "/uploads",
+    ContentTypeProvider = new FileExtensionContentTypeProvider
+    {
+        Mappings = {
+            [".jpg"] = "image/jpeg",
+            [".jpeg"] = "image/jpeg",
+            [".webp"] = "image/webp"
+        }
+    },
+    ServeUnknownFileTypes = true, // Temporary for debugging
+    OnPrepareResponse = ctx =>
+    {
+        // Force correct MIME types
+        var fileExt = Path.GetExtension(ctx.File.Name).ToLower();
+        ctx.Context.Response.Headers["Cache-Control"] = "no-cache";
+
+        if (fileExt == ".jpg" || fileExt == ".jpeg")
+            ctx.Context.Response.ContentType = "image/jpeg";
+        else if (fileExt == ".webp")
+            ctx.Context.Response.ContentType = "image/webp";
+    }
+});
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();

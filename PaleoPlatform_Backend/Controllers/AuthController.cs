@@ -253,8 +253,8 @@ namespace PaleoPlatform_Backend.Controllers
 
             foreach (var user in users)
             {
-                // Check if the user is not '[deleted]' and does not have the 'System' role
-                if (!user.UserName.Equals("[deleted]") &&
+                // Check if the user is not 'deleted_user' and does not have the 'System' role
+                if (!user.UserName.Equals("deleted_user") &&
                     !await _userManager.IsInRoleAsync(user, "System"))
                 {
                     filteredUsers.Add(user);

@@ -68,13 +68,37 @@ namespace PaleoPlatform_Backend.Controllers
 
             try
             {
-                var created = await _service.CreateAsync(articolo, dto.Copertina); // pass IFormFile correctly
+                var created = await _service.CreateAsync(articolo, dto.Copertina);
+
+                // Add this verification:
+                var physicalPath = Path.Combine(
+                    _environment.WebRootPath,
+                    created.CopertinaUrl.TrimStart('/'));
+
+                if (!System.IO.File.Exists(physicalPath))
+                {
+                    return StatusCode(500, "File was not saved correctly");
+                }
+
+                // Return the FULL URL for debugging
+                var fullUrl = $"{Request.Scheme}://{Request.Host}{created.CopertinaUrl}";
                 var readDto = _mapper.Map<ArticoloReadDto>(created);
-                return Ok(readDto);
+                readDto.CopertinaUrl = fullUrl; // Override with full URL
+
+                return Ok(new
+                {
+                    Article = readDto,
+                    DebugInfo = new
+                    {
+                        PhysicalPath = physicalPath,
+                        Url = fullUrl,
+                        FileExists = System.IO.File.Exists(physicalPath)
+                    }
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "Error creating article: " + ex.Message);
+                return StatusCode(500, $"Error: {ex.Message}\nStack: {ex.StackTrace}");
             }
         }
 
@@ -113,7 +137,7 @@ namespace PaleoPlatform_Backend.Controllers
                 return NotFound();  // If article doesn't exist, return 404
             }
 
-            // Retrieve the [deleted] user
+            // Retrieve the deleted_user
             var deletedUser = await _userManager.FindByEmailAsync("deleted_user@deleted.com");
             if (deletedUser == null)
             {
@@ -125,10 +149,10 @@ namespace PaleoPlatform_Backend.Controllers
                 .Where(c => c.ArticoloId == id)
                 .ToListAsync();
 
-            // Reassign comments to the [deleted] user
+            // Reassign comments to the deleted_user
             foreach (var comment in comments)
             {
-                comment.UtenteId = deletedUser.Id;  // Assign to the [deleted] user
+                comment.UtenteId = deletedUser.Id;  // Assign to the deleted_user
             }
 
             // Save changes to comments

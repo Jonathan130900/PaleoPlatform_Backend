@@ -1,6 +1,7 @@
 ﻿using PaleoPlatform_Backend.Data;
 using PaleoPlatform_Backend.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Web;
 
 namespace PaleoPlatform_Backend.Services
 {
@@ -24,26 +25,33 @@ namespace PaleoPlatform_Backend.Services
             _context.Articoli.Add(articolo);
             await _context.SaveChangesAsync();
 
-            var articleFolder = Path.Combine(_environment.WebRootPath, "uploads", $"{articolo.Titolo}");
-            if (!Directory.Exists(articleFolder))
-                Directory.CreateDirectory(articleFolder);
+            // Sanitize title for folder name
+            var safeTitle = HttpUtility.UrlEncode(articolo.Titolo);
+            var articleFolder = Path.Combine(_environment.WebRootPath, "uploads", safeTitle);
+
+            Directory.CreateDirectory(articleFolder); // No need to check exists first
 
             if (copertinaFile != null && copertinaFile.Length > 0)
             {
                 var thumbnailPath = Path.Combine(articleFolder, "thumbnail");
-                if (!Directory.Exists(thumbnailPath))
-                    Directory.CreateDirectory(thumbnailPath);
+                Directory.CreateDirectory(thumbnailPath);
 
                 var thumbnailFileName = Guid.NewGuid().ToString() + Path.GetExtension(copertinaFile.FileName);
                 var thumbnailFilePath = Path.Combine(thumbnailPath, thumbnailFileName);
 
                 await SaveFileAsync(copertinaFile, thumbnailFilePath);
 
-                articolo.CopertinaUrl = $"/uploads/{articolo.Titolo}/thumbnail/{thumbnailFileName}";
+                // URL encode the title in the path
+                articolo.CopertinaUrl = $"/uploads/{safeTitle}/thumbnail/{thumbnailFileName}";
 
-                // Update the articolo with the new URL
                 _context.Articoli.Update(articolo);
                 await _context.SaveChangesAsync();
+
+                // Verify file was saved correctly
+                if (!File.Exists(thumbnailFilePath))
+                {
+                    throw new Exception($"File failed to save to {thumbnailFilePath}");
+                }
             }
 
             return articolo;
@@ -53,17 +61,23 @@ namespace PaleoPlatform_Backend.Services
         {
             try
             {
-                if (file == null || file.Length == 0)
-                    throw new ArgumentException("No file uploaded.");
+                // Ensure directory exists
+                Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
 
-                using (var fileStream = new FileStream(destinationPath, FileMode.Create))
+                using (var stream = new FileStream(destinationPath, FileMode.Create))
                 {
-                    await file.CopyToAsync(fileStream);
+                    await file.CopyToAsync(stream);
+                }
+
+                // Verify file was written
+                if (new FileInfo(destinationPath).Length != file.Length)
+                {
+                    throw new Exception("File size mismatch after save");
                 }
             }
             catch (Exception ex)
             {
-                throw new ApplicationException("Error occurred while saving the file.", ex);
+                throw new ApplicationException($"Error saving file to {destinationPath}", ex);
             }
         }
 

@@ -14,6 +14,7 @@
         public string Contenuto { get; set; }
         public string AutoreUserName { get; set; }
         public DateTime DataPubblicazione { get; set; }
+        public string CopertinaUrl { get; set; }
         public List<CommentoReadDto> Commenti { get; set; }
     }
 
