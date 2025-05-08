@@ -18,6 +18,26 @@ namespace PaleoPlatform_Backend.Services
             _config = config;
         }
 
+        public static class JwtHelpers
+        {
+            public static string GetTokenFromRequest(HttpRequest request)
+            {
+                // Try header first
+                var token = request.Headers["Authorization"]
+                    .FirstOrDefault()?
+                    .Split(" ")
+                    .Last();
+
+                // Fallback to cookie
+                if (string.IsNullOrEmpty(token))
+                {
+                    token = request.Cookies["auth_token"];
+                }
+
+                return token;
+            }
+        }
+
         public async Task<string> GenerateTokenAsync(ApplicationUser user)
         {
             var roles = await _userManager.GetRolesAsync(user);

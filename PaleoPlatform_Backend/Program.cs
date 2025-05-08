@@ -1,16 +1,16 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
-using Swashbuckle.AspNetCore.Filters;
 using PaleoPlatform_Backend.Data;
 using PaleoPlatform_Backend.Helpers;
 using PaleoPlatform_Backend.Models;
-using AutoMapper;
 using PaleoPlatform_Backend.Services;
-using Microsoft.AspNetCore.Http;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,7 +44,7 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer("JwtBearer", options =>
 {
-    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+    options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
         ValidateAudience = true,
@@ -52,16 +52,39 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = "PaleoPlatformAPI",
         ValidAudience = "PaleoPlatformClient",
-        IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
-            System.Text.Encoding.UTF8.GetBytes("SuperSecretKeyThatIsLongEnough123456789")),
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes("SuperSecretKeyThatIsLongEnough123456789")),
         RoleClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role",
         ClockSkew = TimeSpan.Zero
+    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = async context =>
+        {
+            var token = JwtHelpers.GetTokenFromRequest(context.HttpContext.Request);
+
+            if (string.IsNullOrEmpty(token))
+            {
+                context.Fail("No token provided");
+                return;
+            }
+
+            var dbContext = context.HttpContext.RequestServices
+                .GetRequiredService<ApplicationDbContext>();
+
+            if (await dbContext.ExpiredTokens.AnyAsync(t => t.Token == token))
+            {
+                context.Fail("Token has been invalidated");
+            }
+        }
     };
 });
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddHostedService<TokenCleanupService>();
 
 // Configure Swagger with file upload support
 builder.Services.AddSwaggerGen(c =>

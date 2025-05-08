@@ -82,6 +82,7 @@ namespace PaleoPlatform_Backend.Data
         public DbSet<Prodotto> Prodotti { get; set; }
         public DbSet<Carrello> Carrelli { get; set; }
         public DbSet<CarrelloItem> CarrelloItems { get; set; }
+        public DbSet<ExpiredToken> ExpiredTokens { get; set; }
 
     }
 }

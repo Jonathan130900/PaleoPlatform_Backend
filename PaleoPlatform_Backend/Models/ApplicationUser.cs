@@ -14,6 +14,7 @@ namespace PaleoPlatform_Backend.Models
     {
         public UserStatus Status { get; set; } = UserStatus.Active;
         public DateTime? SuspendedUntil { get; set; }
+        public DateTime? LastLogoutDate { get; set; }
         public ICollection<Biglietto> Biglietti { get; set; }
     }
 }

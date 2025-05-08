@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PaleoPlatform_Backend.Data;
 using PaleoPlatform_Backend.Models;
 using PaleoPlatform_Backend.Models.DTOs;
@@ -20,6 +21,7 @@ namespace PaleoPlatform_Backend.Controllers
         private readonly IUtenteService _utenteService;
         private readonly JwtService _jwtService;
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<AuthController> _logger;
 
         public AuthController(
             UserManager<ApplicationUser> userManager,
@@ -27,7 +29,8 @@ namespace PaleoPlatform_Backend.Controllers
             IPasswordHasher<ApplicationUser> passwordHasher,
             IUtenteService utenteService,
             JwtService jwtService,
-            ApplicationDbContext context)
+            ApplicationDbContext context,
+            ILogger<AuthController> logger)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -35,6 +38,7 @@ namespace PaleoPlatform_Backend.Controllers
             _utenteService = utenteService;
             _jwtService = jwtService;
             _context = context;
+            _logger = logger;
         }
 
         [HttpPost("login")]
@@ -46,6 +50,65 @@ namespace PaleoPlatform_Backend.Controllers
 
             var token = await _jwtService.GenerateTokenAsync(user);
             return Ok(new { token });
+        }
+
+        [HttpPost("logout")]
+        [Authorize] // Only authenticated users can logout
+        public async Task<IActionResult> Logout()
+        {
+            try
+            {
+                // 1. Get the current token from header
+                var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+
+                // 2. Get user info from claims
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var user = await _userManager.FindByIdAsync(userId);
+
+                if (user == null)
+                {
+                    return BadRequest(new { message = "User not found" });
+                }
+
+                // 3. Update user's last logout time
+                user.LastLogoutDate = DateTime.UtcNow;
+                await _userManager.UpdateAsync(user);
+
+                // 4. Invalidate the token (implementation below)
+                await InvalidateJwtToken(token);
+
+                // 5. Clear any cookies (if using)
+                Response.Cookies.Delete("auth_token");
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Logged out successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during logout");
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error during logout",
+                    error = ex.Message
+                });
+            }
+        }
+
+        private async Task InvalidateJwtToken(string token)
+        {
+            // Add to database blacklist
+            var expiredToken = new ExpiredToken
+            {
+                Token = token,
+                ExpirationDate = DateTime.UtcNow
+            };
+
+            _context.ExpiredTokens.Add(expiredToken);
+            await _context.SaveChangesAsync();
         }
 
         [HttpPost("register")]
@@ -97,6 +160,29 @@ namespace PaleoPlatform_Backend.Controllers
                     Ruoli = await _userManager.GetRolesAsync(user)
                 }
             });
+        }
+
+        [HttpGet("validate-token")]
+        [Authorize]
+        public IActionResult ValidateToken()
+        {
+            return Ok(new
+            {
+                UserId = User.FindFirstValue(ClaimTypes.NameIdentifier),
+                Username = User.FindFirstValue(ClaimTypes.Name),
+                Roles = User.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList()
+            });
+        }
+
+        [HttpPost("refresh-token")]
+        [Authorize]
+        public async Task<IActionResult> RefreshToken()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+
+            var token = await _jwtService.GenerateTokenAsync(user);
+            return Ok(new { token });
         }
 
         [HttpPost("register-with-role")]
