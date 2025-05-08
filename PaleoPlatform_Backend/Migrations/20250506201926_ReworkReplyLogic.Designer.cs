@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PaleoPlatform_Backend.Data;
 
@@ -11,9 +12,11 @@ using PaleoPlatform_Backend.Data;
 namespace PaleoPlatform_Backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250506201926_ReworkReplyLogic")]
+    partial class ReworkReplyLogic
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -697,8 +700,7 @@ namespace PaleoPlatform_Backend.Migrations
                 {
                     b.HasOne("PaleoPlatform_Backend.Models.Articolo", "Articolo")
                         .WithMany("Commenti")
-                        .HasForeignKey("ArticoloId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .HasForeignKey("ArticoloId");
 
                     b.HasOne("PaleoPlatform_Backend.Models.Discussione", "Discussione")
                         .WithMany("Commenti")
@@ -706,7 +708,7 @@ namespace PaleoPlatform_Backend.Migrations
                         .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("PaleoPlatform_Backend.Models.Commento", "ParentComment")
-                        .WithMany("Replies")
+                        .WithMany()
                         .HasForeignKey("ParentCommentId");
 
                     b.HasOne("PaleoPlatform_Backend.Models.ApplicationUser", "Utente")
@@ -782,11 +784,6 @@ namespace PaleoPlatform_Backend.Migrations
             modelBuilder.Entity("PaleoPlatform_Backend.Models.Carrello", b =>
                 {
                     b.Navigation("Items");
-                });
-
-            modelBuilder.Entity("PaleoPlatform_Backend.Models.Commento", b =>
-                {
-                    b.Navigation("Replies");
                 });
 
             modelBuilder.Entity("PaleoPlatform_Backend.Models.Discussione", b =>

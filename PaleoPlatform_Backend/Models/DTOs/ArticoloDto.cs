@@ -15,7 +15,7 @@
         public string AutoreUserName { get; set; }
         public DateTime DataPubblicazione { get; set; }
         public string CopertinaUrl { get; set; }
-        public List<CommentoReadDto> Commenti { get; set; }
+        public List<CommentoReadDto> Commenti { get; set; } = new List<CommentoReadDto>();
     }
 
     public class InlineImageUploadDto

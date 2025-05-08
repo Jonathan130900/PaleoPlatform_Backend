@@ -21,7 +21,7 @@ namespace PaleoPlatform_Backend.Data
 
             builder.Entity<Commento>()
                 .HasOne(c => c.ParentComment)
-                .WithMany()
+                .WithMany(c => c.Replies)
                 .HasForeignKey(c => c.ParentCommentId)
                 .OnDelete(DeleteBehavior.ClientSetNull); // avoid cascade delete on replies
 
@@ -36,6 +36,13 @@ namespace PaleoPlatform_Backend.Data
                 .WithMany(d => d.Commenti)
                 .HasForeignKey(c => c.DiscussioneId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<Commento>()
+                .HasOne(c => c.Articolo)
+                .WithMany(a => a.Commenti)
+                .HasForeignKey(c => c.ArticoloId)
+                .OnDelete(DeleteBehavior.NoAction);
+
 
             var biglietto = builder.Entity<Biglietto>();
 

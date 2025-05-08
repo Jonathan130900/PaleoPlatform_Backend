@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using PaleoPlatform_Backend.Data;
+using System.Collections.Generic;
 
 namespace PaleoPlatform_Backend.Controllers
 {
@@ -24,12 +25,31 @@ namespace PaleoPlatform_Backend.Controllers
             _userManager = userManager;
         }
 
-        // Create comment endpoint
+        // -------------------- Helper Method --------------------
+        private CommentoReadDto MapToDtoWithReplies(Commento comment)
+        {
+            return new CommentoReadDto
+            {
+                Id = comment.Id,
+                Contenuto = comment.Contenuto,
+                UserName = comment.Utente?.UserName ?? "deleted_user",
+                CreatedAt = comment.DataPubblicazione,
+                ParentCommentId = comment.ParentCommentId,
+                Upvotes = comment.Upvotes,
+                Downvotes = comment.Downvotes,
+                Replies = comment.Replies?
+                    .OrderBy(r => r.DataPubblicazione)
+                    .Select(r => MapToDtoWithReplies(r))
+                    .ToList() ?? new List<CommentoReadDto>()
+            };
+        }
+
+        // -------------------- Create Generic Comment --------------------
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> CreateComment(CommentoCreateDto dto)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // Get the user ID from the JWT
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var comment = new Commento
             {
@@ -41,7 +61,6 @@ namespace PaleoPlatform_Backend.Controllers
             _context.Commenti.Add(comment);
             await _context.SaveChangesAsync();
 
-            // Return the created comment as a DTO
             var createdComment = new CommentoReadDto
             {
                 Id = comment.Id,
@@ -56,104 +75,71 @@ namespace PaleoPlatform_Backend.Controllers
             return CreatedAtAction(nameof(GetComment), new { id = comment.Id }, createdComment);
         }
 
-        // Get a comment by ID
+        // -------------------- Get Comment by ID with Replies --------------------
         [HttpGet("{id}")]
         public async Task<IActionResult> GetComment(int id)
         {
             var comment = await _context.Commenti
-                .Where(c => c.Id == id)
-                .Include(c => c.Utente) // Include user data for UserName
-                .FirstOrDefaultAsync();
+                .Include(c => c.Utente)
+                .Include(c => c.Replies)
+                    .ThenInclude(r => r.Utente)
+                .FirstOrDefaultAsync(c => c.Id == id);
 
             if (comment == null)
                 return NotFound("Commento non trovato");
 
-            var commentDto = new CommentoReadDto
-            {
-                Id = comment.Id,
-                Contenuto = comment.Contenuto,
-                UserName = comment.Utente.UserName,
-                CreatedAt = comment.DataPubblicazione,
-                ParentCommentId = comment.ParentCommentId,
-                Upvotes = comment.Upvotes,
-                Downvotes = comment.Downvotes
-            };
-
-            return Ok(commentDto);
+            return Ok(MapToDtoWithReplies(comment));
         }
 
-        // Vote on a comment (upvote or downvote)
+        // -------------------- Vote on a Comment --------------------
         [HttpPost("vote")]
         [Authorize]
         public async Task<IActionResult> VoteOnComment(VoteDto dto)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // Get the user ID from the JWT
             var comment = await _context.Commenti.FindAsync(dto.CommentoId);
-
             if (comment == null)
                 return NotFound("Commento non trovato");
 
-            // Upvote logic
             if (dto.IsUpvote)
-            {
                 comment.Upvotes++;
-            }
             else
-            {
                 comment.Downvotes++;
-            }
 
             await _context.SaveChangesAsync();
 
-            // Return updated vote counts
-            return Ok(new
-            {
-                comment.Upvotes,
-                comment.Downvotes
-            });
+            return Ok(new { comment.Upvotes, comment.Downvotes });
         }
 
-        // Get comments
+        // -------------------- Get All Top-Level Comments --------------------
         [HttpGet]
         public async Task<IActionResult> GetAllComments()
         {
             var comments = await _context.Commenti
-                .Include(c => c.Utente) // Include the user to fetch their name
-                .Select(c => new CommentoReadDto
-                {
-                    Id = c.Id,
-                    Contenuto = c.Contenuto,
-                    UserName = c.Utente.UserName,
-                    CreatedAt = c.DataPubblicazione,
-                    ParentCommentId = c.ParentCommentId,
-                    Upvotes = c.Upvotes,
-                    Downvotes = c.Downvotes
-                })
+                .Where(c => c.ParentCommentId == null)
+                .Include(c => c.Utente)
+                .Include(c => c.Replies)
+                    .ThenInclude(r => r.Utente)
                 .ToListAsync();
 
-            return Ok(comments);
+            var result = comments.Select(c => MapToDtoWithReplies(c)).ToList();
+            return Ok(result);
         }
 
+        // -------------------- Comment on Articolo --------------------
         [HttpPost("articolo/{articoloId}")]
         [Authorize]
         public async Task<IActionResult> CreateCommentForArticolo(int articoloId, CommentoCreateDto dto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
             var articolo = await _context.Articoli.FindAsync(articoloId);
-            if (articolo == null)
-                return NotFound("Articolo non trovato");
-
-            // Only one of the two IDs is provided (either ArticoloId or DiscussioneId)
-            if (dto.DiscussioneId.HasValue)
-                return BadRequest("You cannot specify a DiscussioneId when commenting on an Articolo");
+            if (articolo == null) return NotFound("Articolo non trovato");
 
             var comment = new Commento
             {
                 Contenuto = dto.Contenuto,
                 UtenteId = userId,
                 ParentCommentId = dto.ParentCommentId,
-                ArticoloId = articoloId,
+                ArticoloId = articoloId
             };
 
             _context.Commenti.Add(comment);
@@ -173,26 +159,21 @@ namespace PaleoPlatform_Backend.Controllers
             return CreatedAtAction(nameof(GetComment), new { id = comment.Id }, createdDto);
         }
 
+        // -------------------- Comment on Discussione --------------------
         [HttpPost("discussione/{discussioneId}")]
         [Authorize]
         public async Task<IActionResult> CreateCommentForDiscussione(int discussioneId, CommentoCreateDto dto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
             var discussione = await _context.Discussione.FindAsync(discussioneId);
-            if (discussione == null)
-                return NotFound("Discussione non trovata");
-
-            // Only one of the two IDs is provided (either ArticoloId or DiscussioneId)
-            if (dto.ArticoloId.HasValue)
-                return BadRequest("You cannot specify an ArticoloId when commenting on a Discussione");
+            if (discussione == null) return NotFound("Discussione non trovata");
 
             var comment = new Commento
             {
                 Contenuto = dto.Contenuto,
                 UtenteId = userId,
                 ParentCommentId = dto.ParentCommentId,
-                DiscussioneId = discussioneId,
+                DiscussioneId = discussioneId
             };
 
             _context.Commenti.Add(comment);
@@ -212,46 +193,70 @@ namespace PaleoPlatform_Backend.Controllers
             return CreatedAtAction(nameof(GetComment), new { id = comment.Id }, createdDto);
         }
 
+        // -------------------- Get Comments for Articolo --------------------
         [HttpGet("articolo/{articoloId}")]
         public async Task<IActionResult> GetCommentsForArticolo(int articoloId)
         {
-            var comments = await _context.Commenti
-                .Where(c => c.ArticoloId == articoloId)
+            var articolo = await _context.Articoli
+                .Include(a => a.Autore)
+                .FirstOrDefaultAsync(a => a.Id == articoloId);
+
+            if (articolo == null) return NotFound();
+
+            var topLevelComments = await _context.Commenti
+                .Where(c => c.ArticoloId == articoloId && c.ParentCommentId == null)
                 .Include(c => c.Utente)
-                .Select(c => new CommentoReadDto
-                {
-                    Id = c.Id,
-                    Contenuto = c.Contenuto,
-                    UserName = c.Utente.UserName,
-                    CreatedAt = c.DataPubblicazione,
-                    ParentCommentId = c.ParentCommentId,
-                    Upvotes = c.Upvotes,
-                    Downvotes = c.Downvotes
-                })
+                .Include(c => c.Replies)
+                    .ThenInclude(r => r.Utente)
+                .OrderByDescending(c => c.DataPubblicazione)
+                .Select(c => MapToDtoWithReplies(c))
                 .ToListAsync();
 
-            return Ok(comments);
+            return Ok(new ArticoloReadDto
+            {
+                Id = articolo.Id,
+                Titolo = articolo.Titolo,
+                Contenuto = articolo.Contenuto,
+                AutoreUserName = articolo.Autore.UserName,
+                DataPubblicazione = articolo.DataPubblicazione,
+                CopertinaUrl = articolo.CopertinaUrl,
+                Commenti = topLevelComments
+            });
         }
 
+        // -------------------- Get Comments for Discussione --------------------
         [HttpGet("discussione/{discussioneId}")]
         public async Task<IActionResult> GetCommentsForDiscussione(int discussioneId)
         {
             var comments = await _context.Commenti
-                .Where(c => c.DiscussioneId == discussioneId)
+                .Where(c => c.DiscussioneId == discussioneId && c.ParentCommentId == null)
                 .Include(c => c.Utente)
-                .Select(c => new CommentoReadDto
-                {
-                    Id = c.Id,
-                    Contenuto = c.Contenuto,
-                    UserName = c.Utente.UserName,
-                    CreatedAt = c.DataPubblicazione,
-                    ParentCommentId = c.ParentCommentId,
-                    Upvotes = c.Upvotes,
-                    Downvotes = c.Downvotes
-                })
+                .Include(c => c.Replies)
+                    .ThenInclude(r => r.Utente)
                 .ToListAsync();
 
-            return Ok(comments);
+            var result = comments.Select(c => MapToDtoWithReplies(c)).ToList();
+            return Ok(result);
+        }
+
+        // -------------------- Delete Comment --------------------
+        [HttpDelete("{id}")]
+        [Authorize]
+        public async Task<IActionResult> DeleteComment(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var comment = await _context.Commenti
+                .Where(c => c.Id == id && c.UtenteId == userId)
+                .Include(c => c.Replies)
+                .FirstOrDefaultAsync();
+
+            if (comment == null)
+                return NotFound("Commento non trovato o non appartiene all'utente");
+
+            _context.Commenti.Remove(comment);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }

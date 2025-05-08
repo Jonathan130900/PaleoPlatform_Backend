@@ -17,6 +17,7 @@ namespace PaleoPlatform_Backend.Models
         // For replies: if it's a top-level comment, this will be null
         public int? ParentCommentId { get; set; }
         public Commento ParentComment { get; set; }
+        public ICollection<Commento> Replies { get; set; } = new List<Commento>();
 
         public int Upvotes { get; set; } = 0;
         public int Downvotes { get; set; } = 0;

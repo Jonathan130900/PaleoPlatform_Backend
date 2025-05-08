@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PaleoPlatform_Backend.Data;
 
@@ -11,9 +12,11 @@ using PaleoPlatform_Backend.Data;
 namespace PaleoPlatform_Backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250507115508_AddCommentoArticoloRelation")]
+    partial class AddCommentoArticoloRelation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -412,6 +415,9 @@ namespace PaleoPlatform_Backend.Migrations
                     b.Property<int?>("ArticoloId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("CommentoId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Contenuto")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -438,6 +444,8 @@ namespace PaleoPlatform_Backend.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ArticoloId");
+
+                    b.HasIndex("CommentoId");
 
                     b.HasIndex("DiscussioneId");
 
@@ -700,13 +708,17 @@ namespace PaleoPlatform_Backend.Migrations
                         .HasForeignKey("ArticoloId")
                         .OnDelete(DeleteBehavior.NoAction);
 
+                    b.HasOne("PaleoPlatform_Backend.Models.Commento", null)
+                        .WithMany("Replies")
+                        .HasForeignKey("CommentoId");
+
                     b.HasOne("PaleoPlatform_Backend.Models.Discussione", "Discussione")
                         .WithMany("Commenti")
                         .HasForeignKey("DiscussioneId")
                         .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("PaleoPlatform_Backend.Models.Commento", "ParentComment")
-                        .WithMany("Replies")
+                        .WithMany()
                         .HasForeignKey("ParentCommentId");
 
                     b.HasOne("PaleoPlatform_Backend.Models.ApplicationUser", "Utente")

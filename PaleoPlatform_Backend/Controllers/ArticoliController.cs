@@ -44,7 +44,16 @@ namespace PaleoPlatform_Backend.Controllers
         {
             var articolo = await _service.GetByIdAsync(id);
             if (articolo == null) return NotFound();
-            return Ok(_mapper.Map<ArticoloReadDto>(articolo));
+
+            var autore = await _userManager.FindByIdAsync(articolo.AutoreId);
+            if (autore != null)
+            {
+                var articoloDto = _mapper.Map<ArticoloReadDto>(articolo);
+                articoloDto.AutoreUserName = autore.UserName;
+                return Ok(articoloDto);
+            }
+
+            return NotFound("Autore non trovato.");
         }
 
         // POST api/articoli (Requires Admin or Moderator)

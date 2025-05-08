@@ -15,7 +15,9 @@ namespace PaleoPlatform_Backend.Helpers
                 .ForMember(dest => dest.Commenti, opt => opt.MapFrom(src => src.Commenti));
 
             CreateMap<Commento, CommentoReadDto>()
-                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Utente.UserName));
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Utente != null ? src.Utente.UserName : "deleted_user"))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.DataPubblicazione))
+                .ForMember(dest => dest.Replies, opt => opt.MapFrom(src => src.Replies != null ? src.Replies : new List<Commento>()));
 
             CreateMap<ArticoloCreateDto, Articolo>();
             CreateMap<ArticoloUpdateDto, Articolo>()

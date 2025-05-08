@@ -1,5 +1,4 @@
 ﻿using PaleoPlatform_Backend.Models;
-using PaleoPlatform_Backend.Models.DTOs;
 
 namespace PaleoPlatform_Backend.Services
 {

@@ -17,6 +17,7 @@
         public int? ParentCommentId { get; set; }
         public int Upvotes { get; set; }
         public int Downvotes { get; set; }
+        public List<CommentoReadDto> Replies { get; set; } = new List<CommentoReadDto>();
     }
 
     public class VoteDto
