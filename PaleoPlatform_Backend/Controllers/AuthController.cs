@@ -53,47 +53,53 @@ namespace PaleoPlatform_Backend.Controllers
         }
 
         [HttpPost("logout")]
-        [Authorize] // Only authenticated users can logout
+        [Authorize]
         public async Task<IActionResult> Logout()
         {
             try
             {
-                // 1. Get the current token from header
-                var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+                // 1. Get token safely
+                var token = Request.Headers["Authorization"].ToString();
+                if (string.IsNullOrEmpty(token) || !token.StartsWith("Bearer "))
+                {
+                    return BadRequest("Invalid token format");
+                }
+                token = token.Replace("Bearer ", "");
 
-                // 2. Get user info from claims
+                // 2. Get user safely
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 var user = await _userManager.FindByIdAsync(userId);
+                if (user == null) return BadRequest("User not found");
 
-                if (user == null)
+                // 3. Update user last logout
+                user.LastLogoutDate = DateTime.UtcNow;
+                var updateResult = await _userManager.UpdateAsync(user);
+                if (!updateResult.Succeeded)
                 {
-                    return BadRequest(new { message = "User not found" });
+                    _logger.LogError("User update failed: {Errors}", updateResult.Errors);
                 }
 
-                // 3. Update user's last logout time
-                user.LastLogoutDate = DateTime.UtcNow;
-                await _userManager.UpdateAsync(user);
-
-                // 4. Invalidate the token (implementation below)
-                await InvalidateJwtToken(token);
-
-                // 5. Clear any cookies (if using)
-                Response.Cookies.Delete("auth_token");
-
-                return Ok(new
+                // 4. Invalidate token with duplicate check
+                if (!await _context.ExpiredTokens.AnyAsync(t => t.Token == token))
                 {
-                    success = true,
-                    message = "Logged out successfully"
-                });
+                    _context.ExpiredTokens.Add(new ExpiredToken
+                    {
+                        Token = token,
+                        ExpirationDate = DateTime.UtcNow
+                    });
+                    await _context.SaveChangesAsync();
+                }
+
+                return Ok(new { success = true });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error during logout");
+                _logger.LogError(ex, "Logout error");
                 return StatusCode(500, new
                 {
                     success = false,
-                    message = "Error during logout",
-                    error = ex.Message
+                    error = ex.Message,
+                    stackTrace = ex.StackTrace
                 });
             }
         }

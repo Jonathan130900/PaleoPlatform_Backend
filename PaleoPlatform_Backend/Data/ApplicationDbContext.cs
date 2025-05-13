@@ -13,6 +13,10 @@ namespace PaleoPlatform_Backend.Data
         {
             base.OnModelCreating(builder);
 
+            builder.Entity<ExpiredToken>()
+                .HasIndex(t => t.Token)
+                .IsUnique(false); // Allow duplicate tokens
+
             builder.Entity<Articolo>()
                 .HasOne(a => a.Autore)
                 .WithMany()
@@ -44,18 +48,19 @@ namespace PaleoPlatform_Backend.Data
                 .OnDelete(DeleteBehavior.NoAction);
 
 
-            var biglietto = builder.Entity<Biglietto>();
+            builder.Entity<Biglietto>()
+                .HasOne(b => b.Evento)
+                .WithMany(e => e.Biglietti)
+                .HasForeignKey(b => b.EventoId);
 
-            biglietto.HasOne(b => b.Evento)
-                     .WithMany(e => e.Biglietti)
-                     .HasForeignKey(b => b.EventoId);
+            builder.Entity<Biglietto>()
+                .HasOne(b => b.Utente)
+                .WithMany(u => u.Biglietti)
+                .HasForeignKey(b => b.UtenteId);
 
-            biglietto.HasOne(b => b.Utente)
-                     .WithMany(u => u.Biglietti)
-                     .HasForeignKey(b => b.UtenteId);
-
-            biglietto.Property(b => b.Prezzo)
-                     .HasPrecision(18, 2);
+            builder.Entity<Biglietto>()
+                .Property(b => b.Prezzo)
+                .HasPrecision(18, 2);
 
             builder.Entity<Evento>()
                 .Property(e => e.Prezzo)
